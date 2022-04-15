@@ -19,4 +19,13 @@ async fn main() {
         .await
         .unwrap();
     println!("{:?}", resp);
+
+    // list the edge
+    let resp = c
+        .edges()
+        .https()
+        .list_unpaged(ngrok_api_rs::types::Paging{limit: Some(1), ..Default::default()})
+        .await
+        .unwrap();
+    println!("{:?}", resp);
 }

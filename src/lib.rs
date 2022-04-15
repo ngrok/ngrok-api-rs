@@ -18,6 +18,7 @@ pub enum Error {
 
 #[derive(Debug, Deserialize)]
 pub struct NgrokError {
+    // TODO: parse out the code, we really shouldn't be using a string for this.
     pub error_code: String,
     pub msg: String,
 }
@@ -48,6 +49,7 @@ impl Client {
         &self,
         path: &str,
         method: reqwest::Method,
+        paging: Option<types::Paging>,
         body: Option<T>,
     ) -> Result<R, Error>
     where
@@ -65,10 +67,12 @@ impl Client {
             .request(method, api_url.join(path).unwrap())
             .bearer_auth(&self.conf.auth_token)
             .header("Ngrok-Version", 2);
-        builder = match body {
-            Some(b) => builder.json(&b),
-            None => builder,
-        };
+        if let Some(b) = body {
+            builder = builder.json(&b);
+        }
+        if let Some(p) = paging {
+            builder = builder.query(&p);
+        }
 
         let resp = builder.send().await?;
 
