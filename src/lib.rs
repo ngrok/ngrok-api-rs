@@ -1,3 +1,4 @@
+use serde::Deserialize;
 use url::Url;
 
 pub mod types;
@@ -9,8 +10,17 @@ pub mod edges;
 pub enum Error {
     #[error("error making request request")]
     RequestError(#[from] reqwest::Error),
-    #[error("TODO: {0}")]
-    TodoError(String),
+    #[error("error")]
+    Ngrok(NgrokError),
+    #[error("unknown error returned: {0}")]
+    UnknownError(String),
+
+}
+
+#[derive(Debug, Deserialize)]
+pub struct NgrokError {
+    pub error_code: String,
+    pub msg: String,
 }
 
 pub struct ClientConfig {
@@ -53,15 +63,19 @@ impl Client {
 
         let resp = builder.send().await?;
 
-        match resp.status() {
-            c if c.is_success() => {
-                resp.json().await
-                    .map_err(|e| e.into())
-            },
-            _ => {
-                Err(Error::TodoError(resp.text().await?))
-            }
+        if resp.status().is_success() {
+            return resp.json().await
+                .map_err(|e| e.into());
         }
 
+        // if we got an error status, see if it fits into an ngrok error, and then if not return it
+        // Unfortunately, that means we have to buffer it so we can try both
+        let resp_bytes = resp.bytes().await?;
+        if let Ok(e) = serde_json::from_slice(&resp_bytes) {
+            // recognized ngrok error
+            return Err(Error::Ngrok(e));
+        }
+        // ¯\_(ツ)_/¯
+        Err(Error::UnknownError(String::from_utf8_lossy(&resp_bytes).into()))
     }
 }
