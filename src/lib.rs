@@ -14,7 +14,6 @@ pub enum Error {
     Ngrok(NgrokError),
     #[error("unknown error returned: {0}")]
     UnknownError(String),
-
 }
 
 #[derive(Debug, Deserialize)]
@@ -45,15 +44,25 @@ impl Client {
         edges::Client::new(self)
     }
 
-    pub(crate) async fn make_request<T, R>(&self, path: &str, method: reqwest::Method, body: Option<T>) -> Result<R, Error>
-        where T: serde::Serialize,
-              R: serde::de::DeserializeOwned
+    pub(crate) async fn make_request<T, R>(
+        &self,
+        path: &str,
+        method: reqwest::Method,
+        body: Option<T>,
+    ) -> Result<R, Error>
+    where
+        T: serde::Serialize,
+        R: serde::de::DeserializeOwned,
     {
-        let api_url = self.conf.api_url.clone().unwrap_or_else(|| {
-            "https://api.ngrok.com".parse::<Url>().unwrap()
-        });
+        let api_url = self
+            .conf
+            .api_url
+            .clone()
+            .unwrap_or_else(|| "https://api.ngrok.com".parse::<Url>().unwrap());
 
-        let mut builder = self.c.request(method, api_url.join(path).unwrap())
+        let mut builder = self
+            .c
+            .request(method, api_url.join(path).unwrap())
             .bearer_auth(&self.conf.auth_token)
             .header("Ngrok-Version", 2);
         builder = match body {
@@ -64,8 +73,7 @@ impl Client {
         let resp = builder.send().await?;
 
         if resp.status().is_success() {
-            return resp.json().await
-                .map_err(|e| e.into());
+            return resp.json().await.map_err(|e| e.into());
         }
 
         // if we got an error status, see if it fits into an ngrok error, and then if not return it
@@ -76,6 +84,8 @@ impl Client {
             return Err(Error::Ngrok(e));
         }
         // ¯\_(ツ)_/¯
-        Err(Error::UnknownError(String::from_utf8_lossy(&resp_bytes).into()))
+        Err(Error::UnknownError(
+            String::from_utf8_lossy(&resp_bytes).into(),
+        ))
     }
 }

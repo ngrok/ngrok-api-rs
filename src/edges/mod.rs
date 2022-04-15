@@ -6,7 +6,7 @@ pub struct Client<'a> {
 
 impl<'a> Client<'a> {
     pub fn new(c: &'a crate::Client) -> Self {
-        Self{c}
+        Self { c }
     }
     pub fn https(&self) -> https::Client {
         https::Client::new(self.c)
