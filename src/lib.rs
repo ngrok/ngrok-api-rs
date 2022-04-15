@@ -9,11 +9,13 @@ pub mod edges;
 pub enum Error {
     #[error("error making request request")]
     RequestError(#[from] reqwest::Error),
+    #[error("TODO: {0}")]
+    TodoError(String),
 }
 
 pub struct ClientConfig {
-    auth_token: String,
-    api_url: Option<Url>,
+    pub auth_token: String,
+    pub api_url: Option<Url>,
 }
 
 pub struct Client {
@@ -29,6 +31,10 @@ impl Client {
         }
     }
 
+    pub fn edges(&self) -> edges::Client {
+        edges::Client::new(self)
+    }
+
     pub(crate) async fn make_request<T, R>(&self, path: &str, method: reqwest::Method, body: Option<T>) -> Result<R, Error>
         where T: serde::Serialize,
               R: serde::de::DeserializeOwned
@@ -38,14 +44,24 @@ impl Client {
         });
 
         let mut builder = self.c.request(method, api_url.join(path).unwrap())
-            .bearer_auth(&self.conf.auth_token);
+            .bearer_auth(&self.conf.auth_token)
+            .header("Ngrok-Version", 2);
         builder = match body {
             Some(b) => builder.json(&b),
             None => builder,
         };
 
         let resp = builder.send().await?;
-        resp.json().await
-            .map_err(|e| e.into())
+
+        match resp.status() {
+            c if c.is_success() => {
+                resp.json().await
+                    .map_err(|e| e.into())
+            },
+            _ => {
+                Err(Error::TodoError(resp.text().await?))
+            }
+        }
+
     }
 }
