@@ -10,6 +10,10 @@ pub struct HTTPSEdge {
 #[derive(Debug, Deserialize)]
 pub struct HTTPSEdgeList {
     pub https_edges: Vec<HTTPSEdge>,
+    pub uri: String,
+
+    // pagination
+    pub next_page_uri: Option<String>,
 }
 
 #[derive(Debug, Serialize, Default)]
