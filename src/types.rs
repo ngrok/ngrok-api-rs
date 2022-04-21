@@ -10,6 +10,10 @@ pub struct HTTPSEdge {
 #[derive(Debug, Deserialize)]
 pub struct HTTPSEdgeList {
     pub https_edges: Vec<HTTPSEdge>,
+    pub uri: String,
+
+    // pagination
+    pub next_page_uri: Option<String>,
 }
 
 #[derive(Debug, Serialize, Default)]
@@ -22,7 +26,7 @@ pub struct HTTPSEdgeCreate {
     pub metadata: Option<String>,
 }
 
-#[derive(Debug, Serialize, Default)]
+#[derive(Debug, Serialize, Default, Clone)]
 pub struct Paging {
     pub before_id: Option<String>,
     pub limit: Option<u64>,
