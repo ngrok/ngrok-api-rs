@@ -5,7 +5,7 @@ use futures::stream::{Stream, TryStreamExt};
 
 #[derive(Clone)]
 pub struct Client {
-    pub(crate) c: crate::Client,
+    c: crate::Client,
 }
 
 impl Client {
@@ -33,13 +33,13 @@ impl Client {
 
     // List all HTTPSEdges
     pub fn list(&self) -> HTTPSEdgeListResp {
-        HTTPSEdgeListResp::new(
-            self.clone(),
-            types::Paging {
+        HTTPSEdgeListResp {
+            c: std::sync::Arc::new(self.clone()),
+            paging: types::Paging {
                 limit: None,
                 before_id: None,
             },
-        )
+        }
     }
 }
 
@@ -49,13 +49,6 @@ pub struct HTTPSEdgeListResp {
 }
 
 impl HTTPSEdgeListResp {
-    pub(crate) fn new(c: Client, paging: types::Paging) -> Self {
-        Self {
-            c: std::sync::Arc::new(c),
-            paging,
-        }
-    }
-
     pub async fn pages(self) -> impl Stream<Item = Result<types::HTTPSEdgeList, Error>> + Unpin {
         struct State {
             c: std::sync::Arc<Client>,
@@ -72,28 +65,23 @@ impl HTTPSEdgeListResp {
         };
 
         Box::pin(futures::stream::unfold(s, |s| async move {
-            if s.init {
-                let page = match s.c.list_page(&s.paging).await {
-                    Err(e) => return Some((Err(e), s)),
-                    Ok(p) => p,
-                };
-                let next = page.next_page_uri.clone();
-                return Some((
-                    Ok(page),
-                    State {
-                        init: false,
-                        cur_uri: next,
-                        ..s
-                    },
-                ));
-            }
-            match s.cur_uri {
-                None => None,
-                Some(ref uri) => {
-                    let page: types::HTTPSEdgeList = match s.c.c.get_by_uri(uri).await {
-                        Err(e) => return Some((Err(e), s)),
-                        Ok(p) => p,
-                    };
+            let page_resp = match (s.init, &s.cur_uri) {
+                (true, _) => {
+                    // initial page
+                    s.c.list_page(&s.paging).await
+                }
+                (false, None) => {
+                    // done
+                    return None;
+                }
+                (false, Some(uri)) => {
+                    // next page
+                    s.c.c.get_by_uri(uri).await
+                }
+            };
+            match page_resp {
+                Err(e) => Some((Err(e), s)),
+                Ok(page) => {
                     let next = page.next_page_uri.clone();
                     Some((
                         Ok(page),
