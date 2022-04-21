@@ -51,7 +51,7 @@ impl Client {
         &self,
         path: &str,
         method: reqwest::Method,
-        paging: Option<types::Paging>,
+        paging: Option<&types::Paging>,
         body: Option<T>,
     ) -> Result<R, Error>
     where

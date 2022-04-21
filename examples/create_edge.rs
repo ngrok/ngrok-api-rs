@@ -15,7 +15,7 @@ async fn main() {
     let resp = c
         .edges()
         .https()
-        .create(ngrok_api_rs::types::HTTPSEdgeCreate {
+        .create(&ngrok_api_rs::types::HTTPSEdgeCreate {
             description: Some("made from rust".into()),
             ..Default::default()
         })

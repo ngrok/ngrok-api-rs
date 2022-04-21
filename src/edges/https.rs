@@ -13,14 +13,14 @@ impl Client {
         Self { c }
     }
 
-    pub async fn create(&self, req: types::HTTPSEdgeCreate) -> Result<types::HTTPSEdge, Error> {
+    pub async fn create(&self, req: &types::HTTPSEdgeCreate) -> Result<types::HTTPSEdge, Error> {
         self.c
             .make_request("/edges/https", reqwest::Method::POST, None, Some(req))
             .await
     }
 
     // Use list instead
-    pub async fn list_page(&self, paging: types::Paging) -> Result<types::HTTPSEdgeList, Error> {
+    pub async fn list_page(&self, paging: &types::Paging) -> Result<types::HTTPSEdgeList, Error> {
         self.c
             .make_request(
                 "/edges/https",
@@ -73,7 +73,7 @@ impl HTTPSEdgeListResp {
 
         Box::pin(futures::stream::unfold(s, |s| async move {
             if s.init {
-                let page = match s.c.list_page(s.paging.clone()).await {
+                let page = match s.c.list_page(&s.paging).await {
                     Err(e) => return Some((Err(e), s)),
                     Ok(p) => p,
                 };
@@ -81,10 +81,9 @@ impl HTTPSEdgeListResp {
                 return Some((
                     Ok(page),
                     State {
-                        c: s.c.clone(),
-                        paging: s.paging,
                         init: false,
                         cur_uri: next,
+                        ..s
                     },
                 ));
             }
@@ -99,10 +98,9 @@ impl HTTPSEdgeListResp {
                     Some((
                         Ok(page),
                         State {
-                            c: s.c.clone(),
-                            paging: s.paging,
                             init: false,
                             cur_uri: next,
+                            ..s
                         },
                     ))
                 }
