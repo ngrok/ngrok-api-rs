@@ -32,7 +32,7 @@ impl Client {
     }
 
     // List all HTTPSEdges
-    pub async fn list(&self) -> HTTPSEdgeListResp {
+    pub fn list(&self) -> HTTPSEdgeListResp {
         HTTPSEdgeListResp::new(
             self.clone(),
             types::Paging {

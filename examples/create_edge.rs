@@ -24,7 +24,7 @@ async fn main() {
     println!("{:?}", resp);
 
     // list all edges in the account
-    let mut stream = c.edges().https().list().await.pages().await;
+    let mut stream = c.edges().https().list().pages().await;
     while let Some(page) = stream.next().await {
         println!("page: {:?}", page);
     }
@@ -34,7 +34,6 @@ async fn main() {
         .edges()
         .https()
         .list()
-        .await
         .https_edges()
         .await
         .collect::<Vec<Result<HTTPSEdge, Error>>>()
