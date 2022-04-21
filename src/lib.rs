@@ -1,9 +1,10 @@
 use serde::Deserialize;
 use url::Url;
 
+mod clients;
 pub mod types;
 
-pub mod edges;
+pub use clients::*;
 
 // TODO: more info, i.e. api path etc, for error.
 #[derive(thiserror::Error, Debug)]
@@ -43,16 +44,11 @@ impl Client {
         }
     }
 
-    pub fn edges(&self) -> edges::Client {
-        edges::Client::new(self.clone())
-    }
-
     pub(crate) async fn make_request<T, R>(
         &self,
         path: &str,
         method: reqwest::Method,
-        paging: Option<&types::Paging>,
-        body: Option<T>,
+        req: Option<T>,
     ) -> Result<R, Error>
     where
         T: serde::Serialize,
@@ -66,14 +62,15 @@ impl Client {
 
         let mut builder = self
             .c
-            .request(method, api_url.join(path).unwrap())
+            .request(method.clone(), api_url.join(path).unwrap())
             .bearer_auth(&self.conf.auth_token)
-            .header("Ngrok-Version", 2);
-        if let Some(b) = body {
-            builder = builder.json(&b);
-        }
-        if let Some(p) = paging {
-            builder = builder.query(&p);
+            .header("Ngrok-Version", "2");
+        if let Some(r) = req {
+            // get requests use query strings instead of bodies
+            builder = match method {
+                reqwest::Method::GET => builder.query(&r),
+                _ => builder.json(&r),
+            };
         }
 
         let resp = builder.send().await?;
