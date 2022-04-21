@@ -1,4 +1,7 @@
-use ngrok_api_rs::{Client, ClientConfig};
+use futures::stream::StreamExt;
+
+use ngrok_api_rs::types::HTTPSEdge;
+use ngrok_api_rs::{Client, ClientConfig, Error};
 
 #[tokio::main]
 async fn main() {
@@ -20,12 +23,23 @@ async fn main() {
         .unwrap();
     println!("{:?}", resp);
 
-    // list the edge
-    let resp = c
+    // list all edges in the account
+    let mut stream = c.edges().https().list().await.pages().await;
+    while let Some(page) = stream.next().await {
+        println!("page: {:?}", page);
+    }
+
+    // vec of edges
+    let edges: Result<Vec<HTTPSEdge>, Error> = c
         .edges()
         .https()
-        .list_unpaged(ngrok_api_rs::types::Paging{limit: Some(1), ..Default::default()})
+        .list()
         .await
-        .unwrap();
-    println!("{:?}", resp);
+        .https_edges()
+        .await
+        .collect::<Vec<Result<HTTPSEdge, Error>>>()
+        .await
+        .into_iter()
+        .collect();
+    println!("edges: {:?}", edges);
 }

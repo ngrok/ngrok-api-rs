@@ -23,11 +23,13 @@ pub struct NgrokError {
     pub msg: String,
 }
 
+#[derive(Clone)]
 pub struct ClientConfig {
     pub auth_token: String,
     pub api_url: Option<Url>,
 }
 
+#[derive(Clone)]
 pub struct Client {
     conf: ClientConfig,
     c: reqwest::Client,
@@ -42,7 +44,7 @@ impl Client {
     }
 
     pub fn edges(&self) -> edges::Client {
-        edges::Client::new(self)
+        edges::Client::new(self.clone())
     }
 
     pub(crate) async fn make_request<T, R>(
@@ -88,6 +90,30 @@ impl Client {
             return Err(Error::Ngrok(e));
         }
         // ¯\_(ツ)_/¯
+        Err(Error::UnknownError(
+            String::from_utf8_lossy(&resp_bytes).into(),
+        ))
+    }
+
+    // XXX: code duplication for expediency
+    pub(crate) async fn get_by_uri<R>(&self, uri: &str) -> Result<R, Error>
+    where
+        R: serde::de::DeserializeOwned,
+    {
+        let builder = self
+            .c
+            .request(reqwest::Method::GET, uri)
+            .bearer_auth(&self.conf.auth_token)
+            .header("Ngrok-Version", "2");
+
+        let resp = builder.send().await?;
+        if resp.status().is_success() {
+            return resp.json().await.map_err(|e| e.into());
+        }
+        let resp_bytes = resp.bytes().await?;
+        if let Ok(e) = serde_json::from_slice(&resp_bytes) {
+            return Err(Error::Ngrok(e));
+        }
         Err(Error::UnknownError(
             String::from_utf8_lossy(&resp_bytes).into(),
         ))

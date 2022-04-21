@@ -26,7 +26,7 @@ pub struct HTTPSEdgeCreate {
     pub metadata: Option<String>,
 }
 
-#[derive(Debug, Serialize, Default)]
+#[derive(Debug, Serialize, Default, Clone)]
 pub struct Paging {
     pub before_id: Option<String>,
     pub limit: Option<u64>,
