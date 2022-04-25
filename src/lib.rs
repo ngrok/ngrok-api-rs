@@ -24,13 +24,13 @@ pub struct NgrokError {
     pub msg: String,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ClientConfig {
     pub auth_token: String,
     pub api_url: Option<Url>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Client {
     conf: ClientConfig,
     c: reqwest::Client,
