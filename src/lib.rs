@@ -52,7 +52,7 @@ impl Client {
     ) -> Result<R, Error>
     where
         T: serde::Serialize,
-        R: serde::de::DeserializeOwned,
+        R: serde::de::DeserializeOwned + Default,
     {
         let api_url = self
             .conf
@@ -75,9 +75,14 @@ impl Client {
 
         let resp = builder.send().await?;
 
-        if resp.status().is_success() {
-            return resp.json().await.map_err(|e| e.into());
+        match resp.status() {
+            reqwest::StatusCode::NO_CONTENT => return Ok(Default::default()),
+            s if s.is_success() => {
+                return resp.json().await.map_err(|e| e.into());
+            }
+            _ => {}
         }
+        if resp.status().is_success() {}
 
         // if we got an error status, see if it fits into an ngrok error, and then if not return it
         // Unfortunately, that means we have to buffer it so we can try both
