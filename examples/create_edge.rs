@@ -5,7 +5,7 @@ use ngrok_api_rs::{Client, ClientConfig, Error};
 
 #[tokio::main]
 async fn main() {
-    let token = std::env::var("NGROK_API_TOKEN").expect("Set NGROK_API_TOKEN env var");
+    let token = std::env::var("NGROK_API_KEY").expect("Set NGROK_API_KEY env var");
 
     let c = Client::new(ClientConfig {
         auth_token: token.to_owned(),
