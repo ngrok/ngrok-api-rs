@@ -82,7 +82,6 @@ impl Client {
             }
             _ => {}
         }
-        if resp.status().is_success() {}
 
         // if we got an error status, see if it fits into an ngrok error, and then if not return it
         // Unfortunately, that means we have to buffer it so we can try both
