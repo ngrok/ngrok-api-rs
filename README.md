@@ -1,12 +1,24 @@
-## WIP - ngrok-api-rs
-
-This is a work-in-progress api client library for rust.
-
-The goal of this is to hand-write a minimal client for a small number of ngrok
-types, and then use that as a model to generate the entire thing.
+## ngrok-api-rs
 
 ### Status
 
-The included examples run and are representative of what is or isn't implemented yet.
+#### Unstable
 
-Not much is implemented.
+This library is currently unstable and actively being iterated on.
+
+You're quite welcome to try it out, but breaking changes may happen without
+notice.
+
+### Description
+
+This library provides types and methods for interacting with the [ngrok HTTP api](https://ngrok.com/docs/api).
+
+It is an [async library](https://rust-lang.github.io/async-book/), and will
+thus require using some form of async runtime.
+
+See the [examples](./examples) for examples of its usage!
+
+### Versioning
+
+This library uses semver. Currently, it is <1.0.0, and so no strict
+compatibility promises are made.
