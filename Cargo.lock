@@ -456,7 +456,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "ngrok-api-rs"
+name = "ngrok-api"
 version = "0.1.0"
 dependencies = [
  "futures",
