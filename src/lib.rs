@@ -24,12 +24,16 @@ pub struct NgrokError {
     pub msg: String,
 }
 
+/// Configuration options for constructing a [Client].
 #[derive(Clone, Debug)]
 pub struct ClientConfig {
-    pub auth_token: String,
+    /// The ngrok API Key to authenticate with. See the [API documentat](https://ngrok.com/docs/api) for more information on creating an ngrok API key.
+    pub api_key: String,
+    /// The URL to connect to. By default, `https://api.ngrok.com`.
     pub api_url: Option<Url>,
 }
 
+/// An ngrok API client.
 #[derive(Clone, Debug)]
 pub struct Client {
     conf: ClientConfig,
@@ -37,6 +41,19 @@ pub struct Client {
 }
 
 impl Client {
+    /// Create a new API client
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use ngrok_api::{Client, ClientConfig};
+    ///
+    /// let c = Client::new(ClientConfig{
+    ///   api_key: "281VSAsp9vBP4HDI1LbjLRuzYOI_4GCt7thvvRp13LPKi4CFk".to_string(),
+    ///   api_url: None,
+    /// });
+    /// // use methods like 'c.reserved_domains().list(...).await' to make API calls.
+    /// ```
     pub fn new(conf: ClientConfig) -> Self {
         Client {
             c: reqwest::Client::new(),
@@ -63,7 +80,7 @@ impl Client {
         let mut builder = self
             .c
             .request(method.clone(), api_url.join(path).unwrap())
-            .bearer_auth(&self.conf.auth_token)
+            .bearer_auth(&self.conf.api_key)
             .header("Ngrok-Version", "2");
         if let Some(r) = req {
             // get requests use query strings instead of bodies
@@ -96,7 +113,6 @@ impl Client {
         ))
     }
 
-    // XXX: code duplication for expediency
     pub(crate) async fn get_by_uri<R>(&self, uri: &str) -> Result<R, Error>
     where
         R: serde::de::DeserializeOwned,
@@ -104,7 +120,7 @@ impl Client {
         let builder = self
             .c
             .request(reqwest::Method::GET, uri)
-            .bearer_auth(&self.conf.auth_token)
+            .bearer_auth(&self.conf.api_key)
             .header("Ngrok-Version", "2");
 
         let resp = builder.send().await?;
