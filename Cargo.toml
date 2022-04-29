@@ -2,8 +2,10 @@
 name = "ngrok-api"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+license = "MIT"
+description = "ngrok API client library for Rust"
+homepage = "https://ngrok.com/docs/api"
+repository = "https://github.com/ngrok/ngrok-api-rs"
 
 [dependencies]
 futures = "0.3.21"
