@@ -1,9 +1,10 @@
 use serde::Deserialize;
 use url::Url;
 
+mod clients;
 pub mod types;
 
-pub mod edges;
+pub use clients::*;
 
 // TODO: more info, i.e. api path etc, for error.
 #[derive(thiserror::Error, Debug)]
@@ -23,13 +24,13 @@ pub struct NgrokError {
     pub msg: String,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ClientConfig {
     pub auth_token: String,
     pub api_url: Option<Url>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Client {
     conf: ClientConfig,
     c: reqwest::Client,
@@ -43,20 +44,15 @@ impl Client {
         }
     }
 
-    pub fn edges(&self) -> edges::Client {
-        edges::Client::new(self.clone())
-    }
-
     pub(crate) async fn make_request<T, R>(
         &self,
         path: &str,
         method: reqwest::Method,
-        paging: Option<&types::Paging>,
-        body: Option<T>,
+        req: Option<T>,
     ) -> Result<R, Error>
     where
         T: serde::Serialize,
-        R: serde::de::DeserializeOwned,
+        R: serde::de::DeserializeOwned + Default,
     {
         let api_url = self
             .conf
@@ -66,20 +62,25 @@ impl Client {
 
         let mut builder = self
             .c
-            .request(method, api_url.join(path).unwrap())
+            .request(method.clone(), api_url.join(path).unwrap())
             .bearer_auth(&self.conf.auth_token)
-            .header("Ngrok-Version", 2);
-        if let Some(b) = body {
-            builder = builder.json(&b);
-        }
-        if let Some(p) = paging {
-            builder = builder.query(&p);
+            .header("Ngrok-Version", "2");
+        if let Some(r) = req {
+            // get requests use query strings instead of bodies
+            builder = match method {
+                reqwest::Method::GET => builder.query(&r),
+                _ => builder.json(&r),
+            };
         }
 
         let resp = builder.send().await?;
 
-        if resp.status().is_success() {
-            return resp.json().await.map_err(|e| e.into());
+        match resp.status() {
+            reqwest::StatusCode::NO_CONTENT => return Ok(Default::default()),
+            s if s.is_success() => {
+                return resp.json().await.map_err(|e| e.into());
+            }
+            _ => {}
         }
 
         // if we got an error status, see if it fits into an ngrok error, and then if not return it
