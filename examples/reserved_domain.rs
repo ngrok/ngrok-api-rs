@@ -1,7 +1,7 @@
 use futures::stream::StreamExt;
 
-use ngrok_api_rs::types;
-use ngrok_api_rs::{Client, ClientConfig, Error};
+use ngrok_api::types;
+use ngrok_api::{Client, ClientConfig, Error};
 
 use rand::Rng;
 

@@ -1,7 +1,7 @@
 use futures::stream::StreamExt;
 
-use ngrok_api_rs::types::HTTPSEdge;
-use ngrok_api_rs::{Client, ClientConfig, Error};
+use ngrok_api::types::HTTPSEdge;
+use ngrok_api::{Client, ClientConfig, Error};
 
 #[tokio::main]
 async fn main() {
@@ -15,7 +15,7 @@ async fn main() {
     let resp = c
         .edges()
         .https()
-        .create(&ngrok_api_rs::types::HTTPSEdgeCreate {
+        .create(&ngrok_api::types::HTTPSEdgeCreate {
             description: "made from rust".into(),
             ..Default::default()
         })
