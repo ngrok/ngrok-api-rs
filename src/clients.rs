@@ -45,12 +45,6 @@ pub mod abuse_reports {
     }
 }
 
-impl Client {
-    pub fn abuse_reports(&self) -> abuse_reports::Client {
-        abuse_reports::Client::new(self.clone())
-    }
-}
-
 pub mod agent_ingresses {
     use crate::types;
     use crate::Error;
@@ -200,12 +194,6 @@ pub mod agent_ingresses {
     }
 }
 
-impl Client {
-    pub fn agent_ingresses(&self) -> agent_ingresses::Client {
-        agent_ingresses::Client::new(self.clone())
-    }
-}
-
 /// API Keys are used to authenticate to the [ngrok
 ///  API](https://ngrok.com/docs/api#authentication). You may use the API itself
 ///  to provision and manage API Keys but you'll need to provision your first API
@@ -352,12 +340,6 @@ pub mod api_keys {
                 )
                 .await
         }
-    }
-}
-
-impl Client {
-    pub fn api_keys(&self) -> api_keys::Client {
-        api_keys::Client::new(self.clone())
     }
 }
 
@@ -521,12 +503,6 @@ pub mod certificate_authorities {
     }
 }
 
-impl Client {
-    pub fn certificate_authorities(&self) -> certificate_authorities::Client {
-        certificate_authorities::Client::new(self.clone())
-    }
-}
-
 /// Tunnel Credentials are ngrok agent authtokens. They authorize the ngrok
 ///  agent to connect the ngrok service as your account. They are installed with
 ///  the `ngrok config add-authtoken` command or by specifying it in the `ngrok.yml`
@@ -686,12 +662,6 @@ pub mod credentials {
     }
 }
 
-impl Client {
-    pub fn credentials(&self) -> credentials::Client {
-        credentials::Client::new(self.clone())
-    }
-}
-
 /// Endpoints provides an API for querying the endpoint objects
 ///  which define what tunnel or edge is used to serve a hostport.
 ///  Only active endpoints associated with a tunnel or backend are returned.
@@ -807,12 +777,6 @@ pub mod endpoints {
     }
 }
 
-impl Client {
-    pub fn endpoints(&self) -> endpoints::Client {
-        endpoints::Client::new(self.clone())
-    }
-}
-
 pub mod event_destinations {
     use crate::types;
     use crate::Error;
@@ -895,8 +859,7 @@ pub mod event_destinations {
         }
 
         /// Create a new Event Destination. It will not apply to anything until it is
-        /// associated with an Event Stream, and that Event Stream is associated with an
-        /// Endpoint Config.
+        /// associated with an Event Subscription.
         pub async fn create(
             &self,
             req: &types::EventDestinationCreate,
@@ -961,12 +924,6 @@ pub mod event_destinations {
                 )
                 .await
         }
-    }
-}
-
-impl Client {
-    pub fn event_destinations(&self) -> event_destinations::Client {
-        event_destinations::Client::new(self.clone())
     }
 }
 
@@ -1118,12 +1075,6 @@ pub mod event_subscriptions {
     }
 }
 
-impl Client {
-    pub fn event_subscriptions(&self) -> event_subscriptions::Client {
-        event_subscriptions::Client::new(self.clone())
-    }
-}
-
 pub mod event_sources {
     use crate::types;
     use crate::Error;
@@ -1216,12 +1167,6 @@ pub mod event_sources {
                 )
                 .await
         }
-    }
-}
-
-impl Client {
-    pub fn event_sources(&self) -> event_sources::Client {
-        event_sources::Client::new(self.clone())
     }
 }
 
@@ -1376,12 +1321,6 @@ pub mod ip_policies {
     }
 }
 
-impl Client {
-    pub fn ip_policies(&self) -> ip_policies::Client {
-        ip_policies::Client::new(self.clone())
-    }
-}
-
 /// IP Policy Rules are the IPv4 or IPv6 CIDRs entries that
 ///  make up an IP Policy.
 pub mod ip_policy_rules {
@@ -1531,12 +1470,6 @@ pub mod ip_policy_rules {
                 )
                 .await
         }
-    }
-}
-
-impl Client {
-    pub fn ip_policy_rules(&self) -> ip_policy_rules::Client {
-        ip_policy_rules::Client::new(self.clone())
     }
 }
 
@@ -1700,12 +1633,6 @@ pub mod ip_restrictions {
     }
 }
 
-impl Client {
-    pub fn ip_restrictions(&self) -> ip_restrictions::Client {
-        ip_restrictions::Client::new(self.clone())
-    }
-}
-
 /// Reserved Addresses are TCP addresses that can be used to listen for traffic.
 ///  TCP address hostnames and ports are assigned by ngrok, they cannot be
 ///  chosen.
@@ -1857,12 +1784,6 @@ pub mod reserved_addrs {
                 )
                 .await
         }
-    }
-}
-
-impl Client {
-    pub fn reserved_addrs(&self) -> reserved_addrs::Client {
-        reserved_addrs::Client::new(self.clone())
     }
 }
 
@@ -2047,12 +1968,6 @@ pub mod reserved_domains {
     }
 }
 
-impl Client {
-    pub fn reserved_domains(&self) -> reserved_domains::Client {
-        reserved_domains::Client::new(self.clone())
-    }
-}
-
 /// An SSH Certificate Authority is a pair of an SSH Certificate and its private
 ///  key that can be used to sign other SSH host and user certificates.
 pub mod ssh_certificate_authorities {
@@ -2215,12 +2130,6 @@ pub mod ssh_certificate_authorities {
     }
 }
 
-impl Client {
-    pub fn ssh_certificate_authorities(&self) -> ssh_certificate_authorities::Client {
-        ssh_certificate_authorities::Client::new(self.clone())
-    }
-}
-
 /// SSH Credentials are SSH public keys that can be used to start SSH tunnels
 ///  via the ngrok SSH tunnel gateway.
 pub mod ssh_credentials {
@@ -2371,12 +2280,6 @@ pub mod ssh_credentials {
                 )
                 .await
         }
-    }
-}
-
-impl Client {
-    pub fn ssh_credentials(&self) -> ssh_credentials::Client {
-        ssh_credentials::Client::new(self.clone())
     }
 }
 
@@ -2536,12 +2439,6 @@ pub mod ssh_host_certificates {
     }
 }
 
-impl Client {
-    pub fn ssh_host_certificates(&self) -> ssh_host_certificates::Client {
-        ssh_host_certificates::Client::new(self.clone())
-    }
-}
-
 /// SSH User Certificates are presented by SSH clients when connecting to an SSH
 ///  server to authenticate their connection. The SSH server must trust the SSH
 ///  Certificate Authority used to sign the certificate.
@@ -2695,12 +2592,6 @@ pub mod ssh_user_certificates {
                 )
                 .await
         }
-    }
-}
-
-impl Client {
-    pub fn ssh_user_certificates(&self) -> ssh_user_certificates::Client {
-        ssh_user_certificates::Client::new(self.clone())
     }
 }
 
@@ -2859,12 +2750,6 @@ pub mod tls_certificates {
                 )
                 .await
         }
-    }
-}
-
-impl Client {
-    pub fn tls_certificates(&self) -> tls_certificates::Client {
-        tls_certificates::Client::new(self.clone())
     }
 }
 
@@ -3035,12 +2920,6 @@ pub mod tunnel_sessions {
     }
 }
 
-impl Client {
-    pub fn tunnel_sessions(&self) -> tunnel_sessions::Client {
-        tunnel_sessions::Client::new(self.clone())
-    }
-}
-
 /// Tunnels provide endpoints to access services exposed by a running ngrok
 ///  agent tunnel session or an SSH reverse tunnel session.
 pub mod tunnels {
@@ -3153,8 +3032,67 @@ pub mod tunnels {
         }
     }
 }
-
 impl Client {
+    pub fn abuse_reports(&self) -> abuse_reports::Client {
+        abuse_reports::Client::new(self.clone())
+    }
+    pub fn agent_ingresses(&self) -> agent_ingresses::Client {
+        agent_ingresses::Client::new(self.clone())
+    }
+    pub fn api_keys(&self) -> api_keys::Client {
+        api_keys::Client::new(self.clone())
+    }
+    pub fn certificate_authorities(&self) -> certificate_authorities::Client {
+        certificate_authorities::Client::new(self.clone())
+    }
+    pub fn credentials(&self) -> credentials::Client {
+        credentials::Client::new(self.clone())
+    }
+    pub fn endpoints(&self) -> endpoints::Client {
+        endpoints::Client::new(self.clone())
+    }
+    pub fn event_destinations(&self) -> event_destinations::Client {
+        event_destinations::Client::new(self.clone())
+    }
+    pub fn event_subscriptions(&self) -> event_subscriptions::Client {
+        event_subscriptions::Client::new(self.clone())
+    }
+    pub fn event_sources(&self) -> event_sources::Client {
+        event_sources::Client::new(self.clone())
+    }
+    pub fn ip_policies(&self) -> ip_policies::Client {
+        ip_policies::Client::new(self.clone())
+    }
+    pub fn ip_policy_rules(&self) -> ip_policy_rules::Client {
+        ip_policy_rules::Client::new(self.clone())
+    }
+    pub fn ip_restrictions(&self) -> ip_restrictions::Client {
+        ip_restrictions::Client::new(self.clone())
+    }
+    pub fn reserved_addrs(&self) -> reserved_addrs::Client {
+        reserved_addrs::Client::new(self.clone())
+    }
+    pub fn reserved_domains(&self) -> reserved_domains::Client {
+        reserved_domains::Client::new(self.clone())
+    }
+    pub fn ssh_certificate_authorities(&self) -> ssh_certificate_authorities::Client {
+        ssh_certificate_authorities::Client::new(self.clone())
+    }
+    pub fn ssh_credentials(&self) -> ssh_credentials::Client {
+        ssh_credentials::Client::new(self.clone())
+    }
+    pub fn ssh_host_certificates(&self) -> ssh_host_certificates::Client {
+        ssh_host_certificates::Client::new(self.clone())
+    }
+    pub fn ssh_user_certificates(&self) -> ssh_user_certificates::Client {
+        ssh_user_certificates::Client::new(self.clone())
+    }
+    pub fn tls_certificates(&self) -> tls_certificates::Client {
+        tls_certificates::Client::new(self.clone())
+    }
+    pub fn tunnel_sessions(&self) -> tunnel_sessions::Client {
+        tunnel_sessions::Client::new(self.clone())
+    }
     pub fn tunnels(&self) -> tunnels::Client {
         tunnels::Client::new(self.clone())
     }
@@ -3327,12 +3265,6 @@ pub mod backends {
         }
     }
 
-    impl Client {
-        pub fn failover(&self) -> failover::Client {
-            failover::Client::new(self.c.clone())
-        }
-    }
-
     pub mod http_response {
         use crate::types;
         use crate::Error;
@@ -3474,12 +3406,6 @@ pub mod backends {
                     )
                     .await
             }
-        }
-    }
-
-    impl Client {
-        pub fn http_response(&self) -> http_response::Client {
-            http_response::Client::new(self.c.clone())
         }
     }
 
@@ -3633,12 +3559,6 @@ pub mod backends {
                     )
                     .await
             }
-        }
-    }
-
-    impl Client {
-        pub fn tunnel_group(&self) -> tunnel_group::Client {
-            tunnel_group::Client::new(self.c.clone())
         }
     }
 
@@ -3797,17 +3717,19 @@ pub mod backends {
             }
         }
     }
-
     impl Client {
+        pub fn failover(&self) -> failover::Client {
+            failover::Client::new(self.c.clone())
+        }
+        pub fn http_response(&self) -> http_response::Client {
+            http_response::Client::new(self.c.clone())
+        }
+        pub fn tunnel_group(&self) -> tunnel_group::Client {
+            tunnel_group::Client::new(self.c.clone())
+        }
         pub fn weighted(&self) -> weighted::Client {
             weighted::Client::new(self.c.clone())
         }
-    }
-}
-
-impl Client {
-    pub fn backends(&self) -> backends::Client {
-        backends::Client::new(self.clone())
     }
 }
 
@@ -3903,12 +3825,6 @@ pub mod edges {
                     )
                     .await
             }
-        }
-    }
-
-    impl Client {
-        pub fn https_routes(&self) -> https_routes::Client {
-            https_routes::Client::new(self.c.clone())
         }
     }
 
@@ -4063,12 +3979,6 @@ pub mod edges {
         }
     }
 
-    impl Client {
-        pub fn https(&self) -> https::Client {
-            https::Client::new(self.c.clone())
-        }
-    }
-
     pub mod tcp {
         use crate::types;
         use crate::Error;
@@ -4217,12 +4127,6 @@ pub mod edges {
                     )
                     .await
             }
-        }
-    }
-
-    impl Client {
-        pub fn tcp(&self) -> tcp::Client {
-            tcp::Client::new(self.c.clone())
         }
     }
 
@@ -4376,17 +4280,19 @@ pub mod edges {
             }
         }
     }
-
     impl Client {
+        pub fn https_routes(&self) -> https_routes::Client {
+            https_routes::Client::new(self.c.clone())
+        }
+        pub fn https(&self) -> https::Client {
+            https::Client::new(self.c.clone())
+        }
+        pub fn tcp(&self) -> tcp::Client {
+            tcp::Client::new(self.c.clone())
+        }
         pub fn tls(&self) -> tls::Client {
             tls::Client::new(self.c.clone())
         }
-    }
-}
-
-impl Client {
-    pub fn edges(&self) -> edges::Client {
-        edges::Client::new(self.clone())
     }
 }
 
@@ -4450,12 +4356,6 @@ pub mod edge_modules {
         }
     }
 
-    impl Client {
-        pub fn https_edge_mutual_tls(&self) -> https_edge_mutual_tls::Client {
-            https_edge_mutual_tls::Client::new(self.c.clone())
-        }
-    }
-
     pub mod https_edge_tls_termination {
         use crate::types;
         use crate::Error;
@@ -4502,12 +4402,6 @@ pub mod edge_modules {
                     )
                     .await
             }
-        }
-    }
-
-    impl Client {
-        pub fn https_edge_tls_termination(&self) -> https_edge_tls_termination::Client {
-            https_edge_tls_termination::Client::new(self.c.clone())
         }
     }
 
@@ -4575,12 +4469,6 @@ pub mod edge_modules {
         }
     }
 
-    impl Client {
-        pub fn https_edge_route_backend(&self) -> https_edge_route_backend::Client {
-            https_edge_route_backend::Client::new(self.c.clone())
-        }
-    }
-
     pub mod https_edge_route_ip_restriction {
         use crate::types;
         use crate::Error;
@@ -4642,12 +4530,6 @@ pub mod edge_modules {
                     )
                     .await
             }
-        }
-    }
-
-    impl Client {
-        pub fn https_edge_route_ip_restriction(&self) -> https_edge_route_ip_restriction::Client {
-            https_edge_route_ip_restriction::Client::new(self.c.clone())
         }
     }
 
@@ -4715,12 +4597,6 @@ pub mod edge_modules {
         }
     }
 
-    impl Client {
-        pub fn https_edge_route_request_headers(&self) -> https_edge_route_request_headers::Client {
-            https_edge_route_request_headers::Client::new(self.c.clone())
-        }
-    }
-
     pub mod https_edge_route_response_headers {
         use crate::types;
         use crate::Error;
@@ -4782,14 +4658,6 @@ pub mod edge_modules {
                     )
                     .await
             }
-        }
-    }
-
-    impl Client {
-        pub fn https_edge_route_response_headers(
-            &self,
-        ) -> https_edge_route_response_headers::Client {
-            https_edge_route_response_headers::Client::new(self.c.clone())
         }
     }
 
@@ -4857,12 +4725,6 @@ pub mod edge_modules {
         }
     }
 
-    impl Client {
-        pub fn https_edge_route_compression(&self) -> https_edge_route_compression::Client {
-            https_edge_route_compression::Client::new(self.c.clone())
-        }
-    }
-
     pub mod https_edge_route_circuit_breaker {
         use crate::types;
         use crate::Error;
@@ -4924,12 +4786,6 @@ pub mod edge_modules {
                     )
                     .await
             }
-        }
-    }
-
-    impl Client {
-        pub fn https_edge_route_circuit_breaker(&self) -> https_edge_route_circuit_breaker::Client {
-            https_edge_route_circuit_breaker::Client::new(self.c.clone())
         }
     }
 
@@ -4997,14 +4853,6 @@ pub mod edge_modules {
         }
     }
 
-    impl Client {
-        pub fn https_edge_route_webhook_verification(
-            &self,
-        ) -> https_edge_route_webhook_verification::Client {
-            https_edge_route_webhook_verification::Client::new(self.c.clone())
-        }
-    }
-
     pub mod https_edge_route_oauth {
         use crate::types;
         use crate::Error;
@@ -5066,12 +4914,6 @@ pub mod edge_modules {
                     )
                     .await
             }
-        }
-    }
-
-    impl Client {
-        pub fn https_edge_route_oauth(&self) -> https_edge_route_oauth::Client {
-            https_edge_route_oauth::Client::new(self.c.clone())
         }
     }
 
@@ -5139,12 +4981,6 @@ pub mod edge_modules {
         }
     }
 
-    impl Client {
-        pub fn https_edge_route_saml(&self) -> https_edge_route_saml::Client {
-            https_edge_route_saml::Client::new(self.c.clone())
-        }
-    }
-
     pub mod https_edge_route_oidc {
         use crate::types;
         use crate::Error;
@@ -5206,12 +5042,6 @@ pub mod edge_modules {
                     )
                     .await
             }
-        }
-    }
-
-    impl Client {
-        pub fn https_edge_route_oidc(&self) -> https_edge_route_oidc::Client {
-            https_edge_route_oidc::Client::new(self.c.clone())
         }
     }
 
@@ -5279,14 +5109,6 @@ pub mod edge_modules {
         }
     }
 
-    impl Client {
-        pub fn https_edge_route_websocket_tcp_converter(
-            &self,
-        ) -> https_edge_route_websocket_tcp_converter::Client {
-            https_edge_route_websocket_tcp_converter::Client::new(self.c.clone())
-        }
-    }
-
     pub mod tcp_edge_backend {
         use crate::types;
         use crate::Error;
@@ -5333,12 +5155,6 @@ pub mod edge_modules {
                     )
                     .await
             }
-        }
-    }
-
-    impl Client {
-        pub fn tcp_edge_backend(&self) -> tcp_edge_backend::Client {
-            tcp_edge_backend::Client::new(self.c.clone())
         }
     }
 
@@ -5391,12 +5207,6 @@ pub mod edge_modules {
         }
     }
 
-    impl Client {
-        pub fn tcp_edge_ip_restriction(&self) -> tcp_edge_ip_restriction::Client {
-            tcp_edge_ip_restriction::Client::new(self.c.clone())
-        }
-    }
-
     pub mod tls_edge_backend {
         use crate::types;
         use crate::Error;
@@ -5443,12 +5253,6 @@ pub mod edge_modules {
                     )
                     .await
             }
-        }
-    }
-
-    impl Client {
-        pub fn tls_edge_backend(&self) -> tls_edge_backend::Client {
-            tls_edge_backend::Client::new(self.c.clone())
         }
     }
 
@@ -5501,12 +5305,6 @@ pub mod edge_modules {
         }
     }
 
-    impl Client {
-        pub fn tls_edge_ip_restriction(&self) -> tls_edge_ip_restriction::Client {
-            tls_edge_ip_restriction::Client::new(self.c.clone())
-        }
-    }
-
     pub mod tls_edge_mutual_tls {
         use crate::types;
         use crate::Error;
@@ -5553,12 +5351,6 @@ pub mod edge_modules {
                     )
                     .await
             }
-        }
-    }
-
-    impl Client {
-        pub fn tls_edge_mutual_tls(&self) -> tls_edge_mutual_tls::Client {
-            tls_edge_mutual_tls::Client::new(self.c.clone())
         }
     }
 
@@ -5610,8 +5402,67 @@ pub mod edge_modules {
             }
         }
     }
-
     impl Client {
+        pub fn https_edge_mutual_tls(&self) -> https_edge_mutual_tls::Client {
+            https_edge_mutual_tls::Client::new(self.c.clone())
+        }
+        pub fn https_edge_tls_termination(&self) -> https_edge_tls_termination::Client {
+            https_edge_tls_termination::Client::new(self.c.clone())
+        }
+        pub fn https_edge_route_backend(&self) -> https_edge_route_backend::Client {
+            https_edge_route_backend::Client::new(self.c.clone())
+        }
+        pub fn https_edge_route_ip_restriction(&self) -> https_edge_route_ip_restriction::Client {
+            https_edge_route_ip_restriction::Client::new(self.c.clone())
+        }
+        pub fn https_edge_route_request_headers(&self) -> https_edge_route_request_headers::Client {
+            https_edge_route_request_headers::Client::new(self.c.clone())
+        }
+        pub fn https_edge_route_response_headers(
+            &self,
+        ) -> https_edge_route_response_headers::Client {
+            https_edge_route_response_headers::Client::new(self.c.clone())
+        }
+        pub fn https_edge_route_compression(&self) -> https_edge_route_compression::Client {
+            https_edge_route_compression::Client::new(self.c.clone())
+        }
+        pub fn https_edge_route_circuit_breaker(&self) -> https_edge_route_circuit_breaker::Client {
+            https_edge_route_circuit_breaker::Client::new(self.c.clone())
+        }
+        pub fn https_edge_route_webhook_verification(
+            &self,
+        ) -> https_edge_route_webhook_verification::Client {
+            https_edge_route_webhook_verification::Client::new(self.c.clone())
+        }
+        pub fn https_edge_route_oauth(&self) -> https_edge_route_oauth::Client {
+            https_edge_route_oauth::Client::new(self.c.clone())
+        }
+        pub fn https_edge_route_saml(&self) -> https_edge_route_saml::Client {
+            https_edge_route_saml::Client::new(self.c.clone())
+        }
+        pub fn https_edge_route_oidc(&self) -> https_edge_route_oidc::Client {
+            https_edge_route_oidc::Client::new(self.c.clone())
+        }
+        pub fn https_edge_route_websocket_tcp_converter(
+            &self,
+        ) -> https_edge_route_websocket_tcp_converter::Client {
+            https_edge_route_websocket_tcp_converter::Client::new(self.c.clone())
+        }
+        pub fn tcp_edge_backend(&self) -> tcp_edge_backend::Client {
+            tcp_edge_backend::Client::new(self.c.clone())
+        }
+        pub fn tcp_edge_ip_restriction(&self) -> tcp_edge_ip_restriction::Client {
+            tcp_edge_ip_restriction::Client::new(self.c.clone())
+        }
+        pub fn tls_edge_backend(&self) -> tls_edge_backend::Client {
+            tls_edge_backend::Client::new(self.c.clone())
+        }
+        pub fn tls_edge_ip_restriction(&self) -> tls_edge_ip_restriction::Client {
+            tls_edge_ip_restriction::Client::new(self.c.clone())
+        }
+        pub fn tls_edge_mutual_tls(&self) -> tls_edge_mutual_tls::Client {
+            tls_edge_mutual_tls::Client::new(self.c.clone())
+        }
         pub fn tls_edge_tls_termination(&self) -> tls_edge_tls_termination::Client {
             tls_edge_tls_termination::Client::new(self.c.clone())
         }
@@ -5619,6 +5470,12 @@ pub mod edge_modules {
 }
 
 impl Client {
+    pub fn backends(&self) -> backends::Client {
+        backends::Client::new(self.clone())
+    }
+    pub fn edges(&self) -> edges::Client {
+        edges::Client::new(self.clone())
+    }
     pub fn edge_modules(&self) -> edge_modules::Client {
         edge_modules::Client::new(self.clone())
     }

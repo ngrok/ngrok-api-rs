@@ -2524,7 +2524,7 @@ pub struct Tunnel {
     pub endpoint: Option<Ref>,
     /// the labels the tunnel group backends will match against, if this is a backend
     /// tunnel
-    pub labels: HashMap<String, String>,
+    pub labels: Option<HashMap<String, String>>,
     /// tunnel group backends served by this backend tunnel
     pub backends: Option<Vec<Ref>>,
     /// upstream address the ngrok agent forwards traffic over this tunnel to. this may
