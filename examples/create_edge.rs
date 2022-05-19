@@ -1,16 +1,13 @@
 use futures::stream::StreamExt;
 
 use ngrok_api::types::HTTPSEdge;
-use ngrok_api::{Client, ClientConfig, Error};
+use ngrok_api::{Client, Error};
 
 #[tokio::main]
 async fn main() {
     let token = std::env::var("NGROK_API_KEY").expect("Set NGROK_API_KEY env var");
 
-    let c = Client::new(ClientConfig {
-        api_key: token.to_owned(),
-        api_url: None,
-    });
+    let c = Client::new(token.to_owned());
 
     let resp = c
         .edges()

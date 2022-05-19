@@ -1,42 +1,64 @@
-use serde::Deserialize;
 use url::Url;
 
 mod clients;
+mod errors;
 pub mod types;
 
 pub use clients::*;
+pub use errors::*;
 
-// TODO: more info, i.e. api path etc, for error.
-#[derive(thiserror::Error, Debug)]
-pub enum Error {
-    #[error("error making request request")]
-    RequestError(#[from] reqwest::Error),
-    #[error("error")]
-    Ngrok(NgrokError),
-    #[error("unknown error returned: {0}")]
-    UnknownError(String),
+/// `ClientBuilder` is a builder for [Client]
+pub struct ClientBuilder {
+    // required options
+    api_key: String,
+
+    // optional
+    api_url: Option<Url>,
+    reqwest_client: Option<reqwest::Client>,
 }
 
-#[derive(Debug, Deserialize)]
-pub struct NgrokError {
-    // TODO: parse out the code, we really shouldn't be using a string for this.
-    pub error_code: String,
-    pub msg: String,
-}
+/// `ClientBuilder` allows customizing various options for the [Client]
+impl ClientBuilder {
+    /// Construct a builder to customize and then build the client.
+    pub fn new(api_key: String) -> ClientBuilder {
+        ClientBuilder {
+            api_key,
+            api_url: None,
+            reqwest_client: None,
+        }
+    }
 
-/// Configuration options for constructing a [Client].
-#[derive(Clone, Debug)]
-pub struct ClientConfig {
-    /// The ngrok API Key to authenticate with. See the [API documentat](https://ngrok.com/docs/api) for more information on creating an ngrok API key.
-    pub api_key: String,
-    /// The URL to connect to. By default, `https://api.ngrok.com`.
-    pub api_url: Option<Url>,
+    /// Set an API url to connect to. By default, the public ngrok API will be used.
+    pub fn api_url(&mut self, api_url: Url) -> &mut Self {
+        self.api_url = Some(api_url);
+        self
+    }
+
+    /// Set a custom reqwest client to use for http requests to the ngrok API.
+    pub fn reqwest_client(&mut self, client: reqwest::Client) -> &mut Self {
+        self.reqwest_client = Some(client);
+        self
+    }
+
+    /// Build the client, applying any options set.
+    pub fn build(self) -> Client {
+        Client {
+            api_key: self.api_key,
+            api_url: self
+                .api_url
+                .unwrap_or_else(|| Url::parse("https://api.ngrok.com").unwrap()),
+            c: self.reqwest_client.unwrap_or_else(reqwest::Client::new),
+        }
+    }
 }
 
 /// An ngrok API client.
 #[derive(Clone, Debug)]
 pub struct Client {
-    conf: ClientConfig,
+    /// The ngrok API Key to authenticate with. See the [API documentat](https://ngrok.com/docs/api) for more information on creating an ngrok API key.
+    api_key: String,
+    /// The API URL base, such as `"https://api.ngrok.com"`.
+    api_url: Url,
     c: reqwest::Client,
 }
 
@@ -46,19 +68,13 @@ impl Client {
     /// # Examples
     ///
     /// ```
-    /// use ngrok_api::{Client, ClientConfig};
+    /// use ngrok_api::Client;
     ///
-    /// let c = Client::new(ClientConfig{
-    ///   api_key: "281VSAsp9vBP4HDI1LbjLRuzYOI_4GCt7thvvRp13LPKi4CFk".to_string(),
-    ///   api_url: None,
-    /// });
+    /// let c = Client::new("EXAMPLETOKEN123456789012345_EXAMPLESECRETIIIIIIIV".to_string());
     /// // use methods like 'c.reserved_domains().list(...).await' to make API calls.
     /// ```
-    pub fn new(conf: ClientConfig) -> Self {
-        Client {
-            c: reqwest::Client::new(),
-            conf,
-        }
+    pub fn new(api_key: String) -> Self {
+        ClientBuilder::new(api_key).build()
     }
 
     pub(crate) async fn make_request<T, R>(
@@ -71,16 +87,12 @@ impl Client {
         T: serde::Serialize,
         R: serde::de::DeserializeOwned + Default,
     {
-        let api_url = self
-            .conf
-            .api_url
-            .clone()
-            .unwrap_or_else(|| "https://api.ngrok.com".parse::<Url>().unwrap());
+        let api_url = &self.api_url;
 
         let mut builder = self
             .c
             .request(method.clone(), api_url.join(path).unwrap())
-            .bearer_auth(&self.conf.api_key)
+            .bearer_auth(&self.api_key)
             .header("Ngrok-Version", "2");
         if let Some(r) = req {
             // get requests use query strings instead of bodies
@@ -120,7 +132,7 @@ impl Client {
         let builder = self
             .c
             .request(reqwest::Method::GET, uri)
-            .bearer_auth(&self.conf.api_key)
+            .bearer_auth(&self.api_key)
             .header("Ngrok-Version", "2");
 
         let resp = builder.send().await?;

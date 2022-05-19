@@ -1,7 +1,7 @@
 use futures::stream::StreamExt;
 
 use ngrok_api::types;
-use ngrok_api::{Client, ClientConfig, Error};
+use ngrok_api::{Client, Error};
 
 use rand::Rng;
 
@@ -9,10 +9,7 @@ use rand::Rng;
 async fn main() {
     let token = std::env::var("NGROK_API_KEY").expect("Set NGROK_API_KEY env var");
 
-    let c = Client::new(ClientConfig {
-        api_key: token.to_owned(),
-        api_url: None,
-    });
+    let c = Client::new(token.to_owned());
 
     let rd = c.reserved_domains();
 
