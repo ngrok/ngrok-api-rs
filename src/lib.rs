@@ -1,10 +1,11 @@
-use serde::Deserialize;
 use url::Url;
 
 mod clients;
+mod errors;
 pub mod types;
 
 pub use clients::*;
+pub use errors::*;
 
 // TODO: more info, i.e. api path etc, for error.
 #[derive(thiserror::Error, Debug)]
