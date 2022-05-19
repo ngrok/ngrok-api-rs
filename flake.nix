@@ -39,6 +39,7 @@
           inputsFrom = [ defaultPackage ];
           buildInputs = with pkgs; [
             pkgs.rust-analyzer
+            pkgs.clippy
             pkgs.cargo
             pkgs.rustc
           ];
