@@ -705,21 +705,21 @@ pub struct EndpointOAuthGitHub {
     /// would like to ask for. these may not be set if you are using the ngrok-managed
     /// oauth app (i.e. you must pass both `client_id` and `client_secret` to set
     /// scopes)
-    pub scopes: Vec<String>,
+    pub scopes: Option<Vec<String>>,
     /// a list of email addresses of users authenticated by identity provider who are
     /// allowed access to the endpoint
-    pub email_addresses: Vec<String>,
+    pub email_addresses: Option<Vec<String>>,
     /// a list of email domains of users authenticated by identity provider who are
     /// allowed access to the endpoint
-    pub email_domains: Vec<String>,
+    pub email_domains: Option<Vec<String>>,
     /// a list of github teams identifiers. users will be allowed access to the endpoint
     /// if they are a member of any of these teams. identifiers should be in the 'slug'
     /// format qualified with the org name, e.g. `org-name/team-name`
-    pub teams: Vec<String>,
+    pub teams: Option<Vec<String>>,
     /// a list of github org identifiers. users who are members of any of the listed
     /// organizations will be allowed access. identifiers should be the organization's
     /// 'slug'
-    pub organizations: Vec<String>,
+    pub organizations: Option<Vec<String>>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
