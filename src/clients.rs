@@ -343,6 +343,254 @@ pub mod api_keys {
     }
 }
 
+pub mod application_sessions {
+    use crate::types;
+    use crate::Error;
+    use futures::{Stream, TryStreamExt};
+
+    #[derive(Debug, Clone)]
+    pub struct Client {
+        c: crate::Client,
+    }
+    /// Provides streams of pages of [types::ApplicationSessionList], or of [types::ApplicationSession] directly.
+    pub struct List {
+        c: std::sync::Arc<Client>,
+        req: types::Paging,
+    }
+
+    impl List {
+        /// Iterate over [types::ApplicationSessionList].
+        ///
+        /// See [Tokio Streams](https://tokio.rs/tokio/tutorial/streams)
+        /// documentation for more info on usage.
+        pub async fn pages(
+            self,
+        ) -> impl Stream<Item = Result<types::ApplicationSessionList, Error>> + Unpin {
+            struct State {
+                c: std::sync::Arc<Client>,
+                req: types::Paging,
+                init: bool,
+                cur_uri: Option<String>,
+            }
+
+            let s = State {
+                c: self.c,
+                req: self.req,
+                init: true,
+                cur_uri: None,
+            };
+
+            Box::pin(futures::stream::unfold(s, |s| async move {
+                let page_resp = match (s.init, &s.cur_uri) {
+                    (true, _) => s.c.list_page(&s.req).await,
+                    (false, None) => {
+                        return None;
+                    }
+                    (false, Some(uri)) => s.c.c.get_by_uri(uri).await,
+                };
+                match page_resp {
+                    Err(e) => Some((Err(e), s)),
+                    Ok(page) => {
+                        let next = page.next_page_uri.clone();
+                        Some((
+                            Ok(page),
+                            State {
+                                init: false,
+                                cur_uri: next,
+                                ..s
+                            },
+                        ))
+                    }
+                }
+            }))
+        }
+
+        /// Iterate over [types::ApplicationSession] items.
+        ///
+        /// See [Tokio Streams](https://tokio.rs/tokio/tutorial/streams)
+        /// documentation for more info on usage.
+        pub async fn application_sessions(
+            self,
+        ) -> impl Stream<Item = Result<types::ApplicationSession, Error>> + Unpin {
+            self.pages()
+                .await
+                .map_ok(|page| futures::stream::iter(page.application_sessions.into_iter().map(Ok)))
+                .try_flatten()
+        }
+    }
+
+    impl Client {
+        pub fn new(c: crate::Client) -> Self {
+            Self { c }
+        }
+
+        /// Get an application session by ID.
+        pub async fn get(&self, id: &str) -> Result<types::ApplicationSession, Error> {
+            self.c
+                .make_request(
+                    &format!("/app/sessions/{id}", id = id),
+                    reqwest::Method::GET,
+                    None::<Option<()>>,
+                )
+                .await
+        }
+
+        /// Delete an application session by ID.
+        pub async fn delete(&self, id: &str) -> Result<(), Error> {
+            self.c
+                .make_request(
+                    &format!("/app/sessions/{id}", id = id),
+                    reqwest::Method::DELETE,
+                    None::<Option<()>>,
+                )
+                .await
+        }
+
+        /// Get a single page without pagination. Prefer using list
+        /// which will do pagination for you.
+        pub(crate) async fn list_page(
+            &self,
+            req: &types::Paging,
+        ) -> Result<types::ApplicationSessionList, Error> {
+            self.c
+                .make_request("/app/sessions", reqwest::Method::GET, Some(req))
+                .await
+        }
+
+        /// List all application sessions for this account.
+        pub fn list(&self, req: types::Paging) -> List {
+            List {
+                c: std::sync::Arc::new(self.clone()),
+                req,
+            }
+        }
+    }
+}
+
+pub mod application_users {
+    use crate::types;
+    use crate::Error;
+    use futures::{Stream, TryStreamExt};
+
+    #[derive(Debug, Clone)]
+    pub struct Client {
+        c: crate::Client,
+    }
+    /// Provides streams of pages of [types::ApplicationUserList], or of [types::ApplicationUser] directly.
+    pub struct List {
+        c: std::sync::Arc<Client>,
+        req: types::Paging,
+    }
+
+    impl List {
+        /// Iterate over [types::ApplicationUserList].
+        ///
+        /// See [Tokio Streams](https://tokio.rs/tokio/tutorial/streams)
+        /// documentation for more info on usage.
+        pub async fn pages(
+            self,
+        ) -> impl Stream<Item = Result<types::ApplicationUserList, Error>> + Unpin {
+            struct State {
+                c: std::sync::Arc<Client>,
+                req: types::Paging,
+                init: bool,
+                cur_uri: Option<String>,
+            }
+
+            let s = State {
+                c: self.c,
+                req: self.req,
+                init: true,
+                cur_uri: None,
+            };
+
+            Box::pin(futures::stream::unfold(s, |s| async move {
+                let page_resp = match (s.init, &s.cur_uri) {
+                    (true, _) => s.c.list_page(&s.req).await,
+                    (false, None) => {
+                        return None;
+                    }
+                    (false, Some(uri)) => s.c.c.get_by_uri(uri).await,
+                };
+                match page_resp {
+                    Err(e) => Some((Err(e), s)),
+                    Ok(page) => {
+                        let next = page.next_page_uri.clone();
+                        Some((
+                            Ok(page),
+                            State {
+                                init: false,
+                                cur_uri: next,
+                                ..s
+                            },
+                        ))
+                    }
+                }
+            }))
+        }
+
+        /// Iterate over [types::ApplicationUser] items.
+        ///
+        /// See [Tokio Streams](https://tokio.rs/tokio/tutorial/streams)
+        /// documentation for more info on usage.
+        pub async fn application_users(
+            self,
+        ) -> impl Stream<Item = Result<types::ApplicationUser, Error>> + Unpin {
+            self.pages()
+                .await
+                .map_ok(|page| futures::stream::iter(page.application_users.into_iter().map(Ok)))
+                .try_flatten()
+        }
+    }
+
+    impl Client {
+        pub fn new(c: crate::Client) -> Self {
+            Self { c }
+        }
+
+        /// Get an application user by ID.
+        pub async fn get(&self, id: &str) -> Result<types::ApplicationUser, Error> {
+            self.c
+                .make_request(
+                    &format!("/app/users/{id}", id = id),
+                    reqwest::Method::GET,
+                    None::<Option<()>>,
+                )
+                .await
+        }
+
+        /// Delete an application user by ID.
+        pub async fn delete(&self, id: &str) -> Result<(), Error> {
+            self.c
+                .make_request(
+                    &format!("/app/users/{id}", id = id),
+                    reqwest::Method::DELETE,
+                    None::<Option<()>>,
+                )
+                .await
+        }
+
+        /// Get a single page without pagination. Prefer using list
+        /// which will do pagination for you.
+        pub(crate) async fn list_page(
+            &self,
+            req: &types::Paging,
+        ) -> Result<types::ApplicationUserList, Error> {
+            self.c
+                .make_request("/app/users", reqwest::Method::GET, Some(req))
+                .await
+        }
+
+        /// List all application users for this account.
+        pub fn list(&self, req: types::Paging) -> List {
+            List {
+                c: std::sync::Arc::new(self.clone()),
+                req,
+            }
+        }
+    }
+}
+
 /// Certificate Authorities are x509 certificates that are used to sign other
 ///  x509 certificates. Attach a Certificate Authority to the Mutual TLS module
 ///  to verify that the TLS certificate presented by a client has been signed by
@@ -3041,6 +3289,12 @@ impl Client {
     }
     pub fn api_keys(&self) -> api_keys::Client {
         api_keys::Client::new(self.clone())
+    }
+    pub fn application_sessions(&self) -> application_sessions::Client {
+        application_sessions::Client::new(self.clone())
+    }
+    pub fn application_users(&self) -> application_users::Client {
+        application_users::Client::new(self.clone())
     }
     pub fn certificate_authorities(&self) -> certificate_authorities::Client {
         certificate_authorities::Client::new(self.clone())
