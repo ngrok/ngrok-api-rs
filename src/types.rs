@@ -133,6 +133,10 @@ pub struct APIKeyCreate {
     pub description: String,
     /// arbitrary user-defined data of this API key. optional, max 4096 bytes
     pub metadata: String,
+    /// If supplied at credential creation, ownership will be assigned to the specified
+    /// User or Bot. Only admins may specify an owner other than themselves. Defaults to
+    /// the authenticated User or Bot.
+    pub owner_id: Option<String>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -162,6 +166,10 @@ pub struct APIKey {
     /// authenticate request to the ngrok API. **This value is only available one time,
     /// on the API response from key creation. Otherwise it is null.**
     pub token: Option<String>,
+    /// If supplied at credential creation, ownership will be assigned to the specified
+    /// User or Bot. Only admins may specify an owner other than themselves. Defaults to
+    /// the authenticated User or Bot.
+    pub owner_id: Option<String>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -172,6 +180,122 @@ pub struct APIKeyList {
     pub uri: String,
     /// URI of the next page, or null if there is no next page
     pub next_page_uri: Option<String>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct ApplicationSession {
+    /// unique application session resource identifier
+    pub id: String,
+    /// URI of the application session API resource
+    pub uri: String,
+    /// URL of the hostport served by this endpoint
+    pub public_url: String,
+    /// browser session details of the application session
+    pub browser_session: BrowserSession,
+    /// application user this session is associated with
+    pub application_user: Option<Ref>,
+    /// timestamp when the user was created in RFC 3339 format
+    pub created_at: String,
+    /// timestamp when the user was last active in RFC 3339 format
+    pub last_active: String,
+    /// timestamp when session expires in RFC 3339 format
+    pub expires_at: String,
+    /// ephemeral endpoint this session is associated with
+    pub endpoint: Option<Ref>,
+    /// edge this session is associated with, null if the endpoint is agent-initiated
+    pub edge: Option<Ref>,
+    /// route this session is associated with, null if the endpoint is agent-initiated
+    pub route: Option<Ref>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct ApplicationSessionList {
+    /// list of all application sessions on this account
+    pub application_sessions: Vec<ApplicationSession>,
+    /// URI of the application session list API resource
+    pub uri: String,
+    /// URI of the next page, or null if there is no next page
+    pub next_page_uri: Option<String>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct BrowserSession {
+    /// HTTP User-Agent data
+    pub user_agent: UserAgent,
+    /// IP address
+    pub ip_address: String,
+    /// IP geolocation data
+    pub location: Option<Location>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct UserAgent {
+    /// raw User-Agent request header
+    pub raw: String,
+    /// browser name (e.g. Chrome)
+    pub browser_name: String,
+    /// browser version (e.g. 102)
+    pub browser_version: String,
+    /// type of device (e.g. Desktop)
+    pub device_type: String,
+    /// operating system name (e.g. MacOS)
+    pub os_name: String,
+    /// operating system version (e.g. 10.15.7)
+    pub os_version: String,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct Location {
+    /// ISO country code
+    pub country_code: Option<String>,
+    /// geographical latitude
+    pub latitude: Option<f64>,
+    /// geographical longitude
+    pub longitude: Option<f64>,
+    /// accuracy radius of the geographical coordinates
+    pub lat_long_radius_km: Option<u64>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct ApplicationUser {
+    /// unique application user resource identifier
+    pub id: String,
+    /// URI of the application user API resource
+    pub uri: String,
+    /// identity provider that the user authenticated with
+    pub identity_provider: IdentityProvider,
+    /// unique user identifier
+    pub provider_user_id: String,
+    /// user username
+    pub username: String,
+    /// user email
+    pub email: String,
+    /// user common name
+    pub name: String,
+    /// timestamp when the user was created in RFC 3339 format
+    pub created_at: String,
+    /// timestamp when the user was last active in RFC 3339 format
+    pub last_active: String,
+    /// timestamp when the user last signed-in in RFC 3339 format
+    pub last_login: String,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct ApplicationUserList {
+    /// list of all application users on this account
+    pub application_users: Vec<ApplicationUser>,
+    /// URI of the application user list API resource
+    pub uri: String,
+    /// URI of the next page, or null if there is no next page
+    pub next_page_uri: Option<String>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct IdentityProvider {
+    /// name of the identity provider (e.g. Google)
+    pub name: String,
+    /// URL of the identity provider (e.g. https://accounts.google.com)
+    pub url: String,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -444,14 +568,21 @@ pub struct CredentialCreate {
     pub metadata: String,
     /// optional list of ACL rules. If unspecified, the credential will have no
     /// restrictions. The only allowed ACL rule at this time is the `bind` rule. The
-    /// `bind` rule allows the caller to restrict what domains and addresses the token
-    /// is allowed to bind. For example, to allow the token to open a tunnel on
-    /// example.ngrok.io your ACL would include the rule `bind:example.ngrok.io`. Bind
-    /// rules may specify a leading wildcard to match multiple domains with a common
-    /// suffix. For example, you may specify a rule of `bind:*.example.com` which will
-    /// allow `x.example.com`, `y.example.com`, `*.example.com`, etc. A rule of `'*'` is
-    /// equivalent to no acl at all and will explicitly permit all actions.
+    /// `bind` rule allows the caller to restrict what domains, addresses, and labels
+    /// the token is allowed to bind. For example, to allow the token to open a tunnel
+    /// on example.ngrok.io your ACL would include the rule `bind:example.ngrok.io`.
+    /// Bind rules for domains may specify a leading wildcard to match multiple domains
+    /// with a common suffix. For example, you may specify a rule of
+    /// `bind:*.example.com` which will allow `x.example.com`, `y.example.com`,
+    /// `*.example.com`, etc. Bind rules for labels may specify a wildcard key and/or
+    /// value to match multiple labels. For example, you may specify a rule of
+    /// `bind:*=example` which will allow `x=example`, `y=example`, etc. A rule of `'*'`
+    /// is equivalent to no acl at all and will explicitly permit all actions.
     pub acl: Vec<String>,
+    /// If supplied at credential creation, ownership will be assigned to the specified
+    /// User or Bot. Only admins may specify an owner other than themselves. Defaults to
+    /// the authenticated User or Bot.
+    pub owner_id: Option<String>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -465,13 +596,16 @@ pub struct CredentialUpdate {
     pub metadata: Option<String>,
     /// optional list of ACL rules. If unspecified, the credential will have no
     /// restrictions. The only allowed ACL rule at this time is the `bind` rule. The
-    /// `bind` rule allows the caller to restrict what domains and addresses the token
-    /// is allowed to bind. For example, to allow the token to open a tunnel on
-    /// example.ngrok.io your ACL would include the rule `bind:example.ngrok.io`. Bind
-    /// rules may specify a leading wildcard to match multiple domains with a common
-    /// suffix. For example, you may specify a rule of `bind:*.example.com` which will
-    /// allow `x.example.com`, `y.example.com`, `*.example.com`, etc. A rule of `'*'` is
-    /// equivalent to no acl at all and will explicitly permit all actions.
+    /// `bind` rule allows the caller to restrict what domains, addresses, and labels
+    /// the token is allowed to bind. For example, to allow the token to open a tunnel
+    /// on example.ngrok.io your ACL would include the rule `bind:example.ngrok.io`.
+    /// Bind rules for domains may specify a leading wildcard to match multiple domains
+    /// with a common suffix. For example, you may specify a rule of
+    /// `bind:*.example.com` which will allow `x.example.com`, `y.example.com`,
+    /// `*.example.com`, etc. Bind rules for labels may specify a wildcard key and/or
+    /// value to match multiple labels. For example, you may specify a rule of
+    /// `bind:*=example` which will allow `x=example`, `y=example`, etc. A rule of `'*'`
+    /// is equivalent to no acl at all and will explicitly permit all actions.
     pub acl: Option<Vec<String>>,
 }
 
@@ -495,14 +629,21 @@ pub struct Credential {
     pub token: Option<String>,
     /// optional list of ACL rules. If unspecified, the credential will have no
     /// restrictions. The only allowed ACL rule at this time is the `bind` rule. The
-    /// `bind` rule allows the caller to restrict what domains and addresses the token
-    /// is allowed to bind. For example, to allow the token to open a tunnel on
-    /// example.ngrok.io your ACL would include the rule `bind:example.ngrok.io`. Bind
-    /// rules may specify a leading wildcard to match multiple domains with a common
-    /// suffix. For example, you may specify a rule of `bind:*.example.com` which will
-    /// allow `x.example.com`, `y.example.com`, `*.example.com`, etc. A rule of `'*'` is
-    /// equivalent to no acl at all and will explicitly permit all actions.
+    /// `bind` rule allows the caller to restrict what domains, addresses, and labels
+    /// the token is allowed to bind. For example, to allow the token to open a tunnel
+    /// on example.ngrok.io your ACL would include the rule `bind:example.ngrok.io`.
+    /// Bind rules for domains may specify a leading wildcard to match multiple domains
+    /// with a common suffix. For example, you may specify a rule of
+    /// `bind:*.example.com` which will allow `x.example.com`, `y.example.com`,
+    /// `*.example.com`, etc. Bind rules for labels may specify a wildcard key and/or
+    /// value to match multiple labels. For example, you may specify a rule of
+    /// `bind:*=example` which will allow `x=example`, `y=example`, etc. A rule of `'*'`
+    /// is equivalent to no acl at all and will explicitly permit all actions.
     pub acl: Vec<String>,
+    /// If supplied at credential creation, ownership will be assigned to the specified
+    /// User or Bot. Only admins may specify an owner other than themselves. Defaults to
+    /// the authenticated User or Bot.
+    pub owner_id: Option<String>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -521,9 +662,8 @@ pub struct EndpointWebhookValidation {
     /// `true` if unspecified
     pub enabled: Option<bool>,
     /// a string indicating which webhook provider will be sending webhooks to this
-    /// endpoint. Value must be one of the supported providers: `SLACK`, `SNS`,
-    /// `STRIPE`, `GITHUB`, `TWILIO`, `SHOPIFY`, `GITLAB`, `INTERCOM`, `SENDGRID`,
-    /// `XERO`, `PAGERDUTY`.
+    /// endpoint. Value must be one of the supported providers defined at
+    /// https://ngrok.com/docs/cloud-edge/modules/webhook
     pub provider: String,
     /// a string secret used to validate requests from the given provider. All providers
     /// except AWS SNS require a secret
@@ -687,6 +827,14 @@ pub struct EndpointOAuthProvider {
     pub microsoft: Option<EndpointOAuthMicrosoft>,
     /// configuration for using google as the identity provider
     pub google: Option<EndpointOAuthGoogle>,
+    /// configuration for using linkedin as the identity provider
+    pub linkedin: Option<EndpointOAuthLinkedIn>,
+    /// configuration for using gitlab as the identity provider
+    pub gitlab: Option<EndpointOAuthGitLab>,
+    /// configuration for using twitch as the identity provider
+    pub twitch: Option<EndpointOAuthTwitch>,
+    /// configuration for using amazon as the identity provider
+    pub amazon: Option<EndpointOAuthAmazon>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -794,6 +942,42 @@ pub struct EndpointOAuthGoogle {
     pub email_addresses: Vec<String>,
     /// a list of email domains of users authenticated by identity provider who are
     /// allowed access to the endpoint
+    pub email_domains: Vec<String>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct EndpointOAuthLinkedIn {
+    pub client_id: Option<String>,
+    pub client_secret: Option<String>,
+    pub scopes: Vec<String>,
+    pub email_addresses: Vec<String>,
+    pub email_domains: Vec<String>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct EndpointOAuthGitLab {
+    pub client_id: Option<String>,
+    pub client_secret: Option<String>,
+    pub scopes: Vec<String>,
+    pub email_addresses: Vec<String>,
+    pub email_domains: Vec<String>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct EndpointOAuthTwitch {
+    pub client_id: Option<String>,
+    pub client_secret: Option<String>,
+    pub scopes: Vec<String>,
+    pub email_addresses: Vec<String>,
+    pub email_domains: Vec<String>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct EndpointOAuthAmazon {
+    pub client_id: Option<String>,
+    pub client_secret: Option<String>,
+    pub scopes: Vec<String>,
+    pub email_addresses: Vec<String>,
     pub email_domains: Vec<String>,
 }
 
@@ -1910,6 +2094,8 @@ pub struct ReservedDomainCreate {
     /// the domain name to reserve. It may be a full domain name like app.example.com.
     /// If the name does not contain a '.' it will reserve that subdomain on ngrok.io.
     pub name: String,
+    /// hostname of the reserved domain
+    pub domain: String,
     /// reserve the domain in this geographic ngrok datacenter. Optional, default is us.
     /// (au, eu, ap, us, jp, in, sa)
     pub region: String,
@@ -2093,16 +2279,23 @@ pub struct SSHCredentialCreate {
     pub metadata: String,
     /// optional list of ACL rules. If unspecified, the credential will have no
     /// restrictions. The only allowed ACL rule at this time is the `bind` rule. The
-    /// `bind` rule allows the caller to restrict what domains and addresses the token
-    /// is allowed to bind. For example, to allow the token to open a tunnel on
-    /// example.ngrok.io your ACL would include the rule `bind:example.ngrok.io`. Bind
-    /// rules may specify a leading wildcard to match multiple domains with a common
-    /// suffix. For example, you may specify a rule of `bind:*.example.com` which will
-    /// allow `x.example.com`, `y.example.com`, `*.example.com`, etc. A rule of `'*'` is
-    /// equivalent to no acl at all and will explicitly permit all actions.
+    /// `bind` rule allows the caller to restrict what domains, addresses, and labels
+    /// the token is allowed to bind. For example, to allow the token to open a tunnel
+    /// on example.ngrok.io your ACL would include the rule `bind:example.ngrok.io`.
+    /// Bind rules for domains may specify a leading wildcard to match multiple domains
+    /// with a common suffix. For example, you may specify a rule of
+    /// `bind:*.example.com` which will allow `x.example.com`, `y.example.com`,
+    /// `*.example.com`, etc. Bind rules for labels may specify a wildcard key and/or
+    /// value to match multiple labels. For example, you may specify a rule of
+    /// `bind:*=example` which will allow `x=example`, `y=example`, etc. A rule of `'*'`
+    /// is equivalent to no acl at all and will explicitly permit all actions.
     pub acl: Vec<String>,
     /// the PEM-encoded public key of the SSH keypair that will be used to authenticate
     pub public_key: String,
+    /// If supplied at credential creation, ownership will be assigned to the specified
+    /// User or Bot. Only admins may specify an owner other than themselves. Defaults to
+    /// the authenticated User or Bot.
+    pub owner_id: Option<String>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -2116,13 +2309,16 @@ pub struct SSHCredentialUpdate {
     pub metadata: Option<String>,
     /// optional list of ACL rules. If unspecified, the credential will have no
     /// restrictions. The only allowed ACL rule at this time is the `bind` rule. The
-    /// `bind` rule allows the caller to restrict what domains and addresses the token
-    /// is allowed to bind. For example, to allow the token to open a tunnel on
-    /// example.ngrok.io your ACL would include the rule `bind:example.ngrok.io`. Bind
-    /// rules may specify a leading wildcard to match multiple domains with a common
-    /// suffix. For example, you may specify a rule of `bind:*.example.com` which will
-    /// allow `x.example.com`, `y.example.com`, `*.example.com`, etc. A rule of `'*'` is
-    /// equivalent to no acl at all and will explicitly permit all actions.
+    /// `bind` rule allows the caller to restrict what domains, addresses, and labels
+    /// the token is allowed to bind. For example, to allow the token to open a tunnel
+    /// on example.ngrok.io your ACL would include the rule `bind:example.ngrok.io`.
+    /// Bind rules for domains may specify a leading wildcard to match multiple domains
+    /// with a common suffix. For example, you may specify a rule of
+    /// `bind:*.example.com` which will allow `x.example.com`, `y.example.com`,
+    /// `*.example.com`, etc. Bind rules for labels may specify a wildcard key and/or
+    /// value to match multiple labels. For example, you may specify a rule of
+    /// `bind:*=example` which will allow `x=example`, `y=example`, etc. A rule of `'*'`
+    /// is equivalent to no acl at all and will explicitly permit all actions.
     pub acl: Option<Vec<String>>,
 }
 
@@ -2144,14 +2340,21 @@ pub struct SSHCredential {
     pub public_key: String,
     /// optional list of ACL rules. If unspecified, the credential will have no
     /// restrictions. The only allowed ACL rule at this time is the `bind` rule. The
-    /// `bind` rule allows the caller to restrict what domains and addresses the token
-    /// is allowed to bind. For example, to allow the token to open a tunnel on
-    /// example.ngrok.io your ACL would include the rule `bind:example.ngrok.io`. Bind
-    /// rules may specify a leading wildcard to match multiple domains with a common
-    /// suffix. For example, you may specify a rule of `bind:*.example.com` which will
-    /// allow `x.example.com`, `y.example.com`, `*.example.com`, etc. A rule of `'*'` is
-    /// equivalent to no acl at all and will explicitly permit all actions.
+    /// `bind` rule allows the caller to restrict what domains, addresses, and labels
+    /// the token is allowed to bind. For example, to allow the token to open a tunnel
+    /// on example.ngrok.io your ACL would include the rule `bind:example.ngrok.io`.
+    /// Bind rules for domains may specify a leading wildcard to match multiple domains
+    /// with a common suffix. For example, you may specify a rule of
+    /// `bind:*.example.com` which will allow `x.example.com`, `y.example.com`,
+    /// `*.example.com`, etc. Bind rules for labels may specify a wildcard key and/or
+    /// value to match multiple labels. For example, you may specify a rule of
+    /// `bind:*=example` which will allow `x=example`, `y=example`, etc. A rule of `'*'`
+    /// is equivalent to no acl at all and will explicitly permit all actions.
     pub acl: Vec<String>,
+    /// If supplied at credential creation, ownership will be assigned to the specified
+    /// User or Bot. Only admins may specify an owner other than themselves. Defaults to
+    /// the authenticated User or Bot.
+    pub owner_id: Option<String>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
