@@ -755,6 +755,8 @@ pub struct EndpointIPPolicy {
     /// `true` if the module will be applied to traffic, `false` to disable. default
     /// `true` if unspecified
     pub enabled: Option<bool>,
+    /// list of all IP policies that will be used to check if a source IP is allowed
+    /// access to the endpoint
     pub ip_policies: Vec<Ref>,
 }
 
@@ -2575,10 +2577,10 @@ pub struct TLSCertificateCreate {
     /// max 4096 bytes.
     pub metadata: String,
     /// chain of PEM-encoded certificates, leaf first. See [Certificate
-    /// Bundles](https://ngrok.com/docs/api#tls-certificates-pem).
+    /// Bundles](/cloud-edge/endpoints#certificate-chains).
     pub certificate_pem: String,
     /// private key for the TLS certificate, PEM-encoded. See [Private
-    /// Keys](https://ngrok.com/docs/ngrok-link#tls-certificates-key).
+    /// Keys](/cloud-edge/endpoints#private-keys).
     pub private_key_pem: String,
 }
 
@@ -2606,7 +2608,7 @@ pub struct TLSCertificate {
     /// max 4096 bytes.
     pub metadata: String,
     /// chain of PEM-encoded certificates, leaf first. See [Certificate
-    /// Bundles](https://ngrok.com/docs/api#tls-certificates-pem).
+    /// Bundles](/cloud-edge/endpoints#certificate-chains).
     pub certificate_pem: String,
     /// subject common name from the leaf of this TLS certificate
     pub subject_common_name: String,
@@ -2712,9 +2714,9 @@ pub struct Tunnel {
     pub started_at: String,
     /// user-supplied metadata for the tunnel defined in the ngrok configuration file.
     /// See the tunnel [metadata configuration
-    /// option](https://ngrok.com/docs#tunnel-definitions-metadata) In API version 0,
-    /// this value was instead pulled from the top-level [metadata configuration
-    /// option](https://ngrok.com/docs#config_metadata).
+    /// option](/ngrok-agent/config#common-tunnel-configuration-properties) In API
+    /// version 0, this value was instead pulled from the top-level [metadata
+    /// configuration option](/ngrok-agent/config#metadata).
     pub metadata: String,
     /// tunnel protocol for ephemeral tunnels. one of `http`, `https`, `tcp` or `tls`
     pub proto: String,
