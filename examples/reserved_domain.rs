@@ -17,7 +17,7 @@ async fn main() {
     let rand: u64 = rand::thread_rng().gen();
     let resp = rd
         .create(&types::ReservedDomainCreate {
-            name: format!("rustexample{}", rand),
+            domain: format!("rustexample{}.ngrok.io", rand),
             ..Default::default()
         })
         .await
