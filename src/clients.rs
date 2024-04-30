@@ -758,6 +758,144 @@ pub mod tunnel_sessions {
     }
 }
 
+pub mod bot_users {
+    use crate::types;
+    use crate::Error;
+    use futures::{Stream, TryStreamExt};
+
+    #[derive(Debug, Clone)]
+    pub struct Client {
+        c: crate::Client,
+    }
+    /// Provides streams of pages of [types::BotUserList], or of [types::BotUser] directly.
+    pub struct List {
+        c: std::sync::Arc<Client>,
+        req: types::Paging,
+    }
+
+    impl List {
+        /// Iterate over [types::BotUserList].
+        ///
+        /// See [Tokio Streams](https://tokio.rs/tokio/tutorial/streams)
+        /// documentation for more info on usage.
+        pub async fn pages(self) -> impl Stream<Item = Result<types::BotUserList, Error>> + Unpin {
+            struct State {
+                c: std::sync::Arc<Client>,
+                req: types::Paging,
+                init: bool,
+                cur_uri: Option<String>,
+            }
+
+            let s = State {
+                c: self.c,
+                req: self.req,
+                init: true,
+                cur_uri: None,
+            };
+
+            Box::pin(futures::stream::unfold(s, |s| async move {
+                let page_resp = match (s.init, &s.cur_uri) {
+                    (true, _) => s.c.list_page(&s.req).await,
+                    (false, None) => {
+                        return None;
+                    }
+                    (false, Some(uri)) => s.c.c.get_by_uri(uri).await,
+                };
+                match page_resp {
+                    Err(e) => Some((Err(e), s)),
+                    Ok(page) => {
+                        let next = page.next_page_uri.clone();
+                        Some((
+                            Ok(page),
+                            State {
+                                init: false,
+                                cur_uri: next,
+                                ..s
+                            },
+                        ))
+                    }
+                }
+            }))
+        }
+
+        /// Iterate over [types::BotUser] items.
+        ///
+        /// See [Tokio Streams](https://tokio.rs/tokio/tutorial/streams)
+        /// documentation for more info on usage.
+        pub async fn bot_users(self) -> impl Stream<Item = Result<types::BotUser, Error>> + Unpin {
+            self.pages()
+                .await
+                .map_ok(|page| futures::stream::iter(page.bot_users.into_iter().map(Ok)))
+                .try_flatten()
+        }
+    }
+
+    impl Client {
+        pub fn new(c: crate::Client) -> Self {
+            Self { c }
+        }
+
+        /// Create a new bot user
+        pub async fn create(&self, req: &types::BotUserCreate) -> Result<types::BotUser, Error> {
+            self.c
+                .make_request("/bot_users", reqwest::Method::POST, Some(req))
+                .await
+        }
+
+        /// Delete a bot user by ID
+        pub async fn delete(&self, id: &str) -> Result<(), Error> {
+            self.c
+                .make_request(
+                    &format!("/bot_users/{id}", id = id),
+                    reqwest::Method::DELETE,
+                    None::<Option<()>>,
+                )
+                .await
+        }
+
+        /// Get the details of a Bot User by ID.
+        pub async fn get(&self, id: &str) -> Result<types::BotUser, Error> {
+            self.c
+                .make_request(
+                    &format!("/bot_users/{id}", id = id),
+                    reqwest::Method::GET,
+                    None::<Option<()>>,
+                )
+                .await
+        }
+
+        /// Get a single page without pagination. Prefer using list
+        /// which will do pagination for you.
+        pub(crate) async fn list_page(
+            &self,
+            req: &types::Paging,
+        ) -> Result<types::BotUserList, Error> {
+            self.c
+                .make_request("/bot_users", reqwest::Method::GET, Some(req))
+                .await
+        }
+
+        /// List all bot users in this account.
+        pub fn list(&self, req: types::Paging) -> List {
+            List {
+                c: std::sync::Arc::new(self.clone()),
+                req,
+            }
+        }
+
+        /// Update attributes of a bot user by ID.
+        pub async fn update(&self, req: &types::BotUserUpdate) -> Result<types::BotUser, Error> {
+            self.c
+                .make_request(
+                    &format!("/bot_users/{id}", id = req.id),
+                    reqwest::Method::PATCH,
+                    Some(req),
+                )
+                .await
+        }
+    }
+}
+
 /// Certificate Authorities are x509 certificates that are used to sign other
 ///  x509 certificates. Attach a Certificate Authority to the Mutual TLS module
 ///  to verify that the TLS certificate presented by a client has been signed by
@@ -3299,6 +3437,9 @@ impl Client {
     pub fn tunnel_sessions(&self) -> tunnel_sessions::Client {
         tunnel_sessions::Client::new(self.clone())
     }
+    pub fn bot_users(&self) -> bot_users::Client {
+        bot_users::Client::new(self.clone())
+    }
     pub fn certificate_authorities(&self) -> certificate_authorities::Client {
         certificate_authorities::Client::new(self.clone())
     }
@@ -3663,6 +3804,158 @@ pub mod backends {
         }
     }
 
+    /// A static backend sends traffic to a TCP address (hostname and port) that
+    ///  is reachable on the public internet.
+    pub mod static_address {
+        use crate::types;
+        use crate::Error;
+        use futures::{Stream, TryStreamExt};
+
+        /// A static backend sends traffic to a TCP address (hostname and port) that
+        ///  is reachable on the public internet.
+        #[derive(Debug, Clone)]
+        pub struct Client {
+            c: crate::Client,
+        }
+        /// Provides streams of pages of [types::StaticBackendList], or of [types::StaticBackend] directly.
+        pub struct List {
+            c: std::sync::Arc<Client>,
+            req: types::Paging,
+        }
+
+        impl List {
+            /// Iterate over [types::StaticBackendList].
+            ///
+            /// See [Tokio Streams](https://tokio.rs/tokio/tutorial/streams)
+            /// documentation for more info on usage.
+            pub async fn pages(
+                self,
+            ) -> impl Stream<Item = Result<types::StaticBackendList, Error>> + Unpin {
+                struct State {
+                    c: std::sync::Arc<Client>,
+                    req: types::Paging,
+                    init: bool,
+                    cur_uri: Option<String>,
+                }
+
+                let s = State {
+                    c: self.c,
+                    req: self.req,
+                    init: true,
+                    cur_uri: None,
+                };
+
+                Box::pin(futures::stream::unfold(s, |s| async move {
+                    let page_resp = match (s.init, &s.cur_uri) {
+                        (true, _) => s.c.list_page(&s.req).await,
+                        (false, None) => {
+                            return None;
+                        }
+                        (false, Some(uri)) => s.c.c.get_by_uri(uri).await,
+                    };
+                    match page_resp {
+                        Err(e) => Some((Err(e), s)),
+                        Ok(page) => {
+                            let next = page.next_page_uri.clone();
+                            Some((
+                                Ok(page),
+                                State {
+                                    init: false,
+                                    cur_uri: next,
+                                    ..s
+                                },
+                            ))
+                        }
+                    }
+                }))
+            }
+
+            /// Iterate over [types::StaticBackend] items.
+            ///
+            /// See [Tokio Streams](https://tokio.rs/tokio/tutorial/streams)
+            /// documentation for more info on usage.
+            pub async fn backends(
+                self,
+            ) -> impl Stream<Item = Result<types::StaticBackend, Error>> + Unpin {
+                self.pages()
+                    .await
+                    .map_ok(|page| futures::stream::iter(page.backends.into_iter().map(Ok)))
+                    .try_flatten()
+            }
+        }
+
+        impl Client {
+            pub fn new(c: crate::Client) -> Self {
+                Self { c }
+            }
+
+            /// Create a new static backend
+            pub async fn create(
+                &self,
+                req: &types::StaticBackendCreate,
+            ) -> Result<types::StaticBackend, Error> {
+                self.c
+                    .make_request("/backends/static", reqwest::Method::POST, Some(req))
+                    .await
+            }
+
+            /// Delete a static backend by ID.
+            pub async fn delete(&self, id: &str) -> Result<(), Error> {
+                self.c
+                    .make_request(
+                        &format!("/backends/static/{id}", id = id),
+                        reqwest::Method::DELETE,
+                        None::<Option<()>>,
+                    )
+                    .await
+            }
+
+            /// Get detailed information about a static backend by ID
+            pub async fn get(&self, id: &str) -> Result<types::StaticBackend, Error> {
+                self.c
+                    .make_request(
+                        &format!("/backends/static/{id}", id = id),
+                        reqwest::Method::GET,
+                        None::<Option<()>>,
+                    )
+                    .await
+            }
+
+            /// Get a single page without pagination. Prefer using list
+            /// which will do pagination for you.
+            pub(crate) async fn list_page(
+                &self,
+                req: &types::Paging,
+            ) -> Result<types::StaticBackendList, Error> {
+                self.c
+                    .make_request("/backends/static", reqwest::Method::GET, Some(req))
+                    .await
+            }
+
+            /// List all static backends on this account
+            pub fn list(&self, req: types::Paging) -> List {
+                List {
+                    c: std::sync::Arc::new(self.clone()),
+                    req,
+                }
+            }
+
+            /// Update static backend by ID
+            pub async fn update(
+                &self,
+                req: &types::StaticBackendUpdate,
+            ) -> Result<types::StaticBackend, Error> {
+                self.c
+                    .make_request(
+                        &format!("/backends/static/{id}", id = req.id),
+                        reqwest::Method::PATCH,
+                        Some(req),
+                    )
+                    .await
+            }
+        }
+    }
+
     /// A Tunnel Group Backend balances traffic among all online tunnels that match
     ///  a label selector.
     pub mod tunnel_group {
@@ -3977,6 +4270,9 @@ pub mod backends {
         }
         pub fn http_response(&self) -> http_response::Client {
             http_response::Client::new(self.c.clone())
+        }
+        pub fn static_address(&self) -> static_address::Client {
+            static_address::Client::new(self.c.clone())
         }
         pub fn tunnel_group(&self) -> tunnel_group::Client {
             tunnel_group::Client::new(self.c.clone())
@@ -5363,6 +5659,70 @@ pub mod edge_modules {
         }
     }
 
+    pub mod https_edge_route_user_agent_filter {
+        use crate::types;
+        use crate::Error;
+
+        #[derive(Debug, Clone)]
+        pub struct Client {
+            c: crate::Client,
+        }
+
+        impl Client {
+            pub fn new(c: crate::Client) -> Self {
+                Self { c }
+            }
+
+            pub async fn replace(
+                &self,
+                req: &types::EdgeRouteUserAgentFilterReplace,
+            ) -> Result<types::EndpointUserAgentFilter, Error> {
+                self.c
+                    .make_request(
+                        &format!(
+                            "/edges/https/{edge_id}/routes/{id}/user_agent_filter",
+                            edge_id = req.edge_id,
+                            id = req.id
+                        ),
+                        reqwest::Method::PUT,
+                        Some(req),
+                    )
+                    .await
+            }
+
+            pub async fn get(
+                &self,
+                req: &types::EdgeRouteItem,
+            ) -> Result<types::EndpointUserAgentFilter, Error> {
+                self.c
+                    .make_request(
+                        &format!(
+                            "/edges/https/{edge_id}/routes/{id}/user_agent_filter",
+                            edge_id = req.edge_id,
+                            id = req.id
+                        ),
+                        reqwest::Method::GET,
+                        None::<Option<()>>,
+                    )
+                    .await
+            }
+
+            pub async fn delete(&self, req: &types::EdgeRouteItem) -> Result<(), Error> {
+                self.c
+                    .make_request(
+                        &format!(
+                            "/edges/https/{edge_id}/routes/{id}/user_agent_filter",
+                            edge_id = req.edge_id,
+                            id = req.id
+                        ),
+                        reqwest::Method::DELETE,
+                        None::<Option<()>>,
+                    )
+                    .await
+            }
+        }
+    }
+
     pub mod tcp_edge_backend {
         use crate::types;
         use crate::Error;
@@ -5701,6 +6061,11 @@ pub mod edge_modules {
             &self,
         ) -> https_edge_route_websocket_tcp_converter::Client {
             https_edge_route_websocket_tcp_converter::Client::new(self.c.clone())
+        }
+        pub fn https_edge_route_user_agent_filter(
+            &self,
+        ) -> https_edge_route_user_agent_filter::Client {
+            https_edge_route_user_agent_filter::Client::new(self.c.clone())
         }
         pub fn tcp_edge_backend(&self) -> tcp_edge_backend::Client {
             tcp_edge_backend::Client::new(self.c.clone())
