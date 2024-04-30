@@ -489,6 +489,65 @@ pub struct HTTPResponseBackendList {
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct StaticBackend {
+    /// unique identifier for this static backend
+    pub id: String,
+    /// URI of the StaticBackend API resource
+    pub uri: String,
+    /// timestamp when the backend was created, RFC 3339 format
+    pub created_at: String,
+    /// human-readable description of this backend. Optional
+    pub description: String,
+    /// arbitrary user-defined machine-readable data of this backend. Optional
+    pub metadata: String,
+    /// the address to forward to
+    pub address: String,
+    /// tls configuration to use
+    pub tls: StaticBackendTLS,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct StaticBackendTLS {
+    /// if TLS is checked
+    pub enabled: bool,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct StaticBackendCreate {
+    /// human-readable description of this backend. Optional
+    pub description: String,
+    /// arbitrary user-defined machine-readable data of this backend. Optional
+    pub metadata: String,
+    /// the address to forward to
+    pub address: String,
+    /// tls configuration to use
+    pub tls: StaticBackendTLS,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct StaticBackendUpdate {
+    pub id: String,
+    /// human-readable description of this backend. Optional
+    pub description: Option<String>,
+    /// arbitrary user-defined machine-readable data of this backend. Optional
+    pub metadata: Option<String>,
+    /// the address to forward to
+    pub address: String,
+    /// tls configuration to use
+    pub tls: StaticBackendTLS,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct StaticBackendList {
+    /// the list of all static backends on this account
+    pub backends: Vec<StaticBackend>,
+    /// URI of the static backends list API resource
+    pub uri: String,
+    /// URI of the next page, or null if there is no next page
+    pub next_page_uri: Option<String>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct TunnelGroupBackend {
     /// unique identifier for this TunnelGroup backend
     pub id: String,
@@ -579,6 +638,47 @@ pub struct WeightedBackendList {
     /// the list of all Weighted backends on this account
     pub backends: Vec<WeightedBackend>,
     /// URI of the Weighted backends list API resource
+    pub uri: String,
+    /// URI of the next page, or null if there is no next page
+    pub next_page_uri: Option<String>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct BotUser {
+    /// unique API key resource identifier
+    pub id: String,
+    /// URI to the API resource of this bot user
+    pub uri: String,
+    /// human-readable name used to identify the bot
+    pub name: String,
+    /// whether or not the bot is active
+    pub active: bool,
+    /// timestamp when the api key was created, RFC 3339 format
+    pub created_at: String,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct BotUserCreate {
+    /// human-readable name used to identify the bot
+    pub name: String,
+    /// whether or not the bot is active
+    pub active: Option<bool>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct BotUserUpdate {
+    pub id: String,
+    /// human-readable name used to identify the bot
+    pub name: Option<String>,
+    /// whether or not the bot is active
+    pub active: Option<bool>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct BotUserList {
+    /// the list of all bot users on this account
+    pub bot_users: Vec<BotUser>,
+    /// URI of the bot users list API resource
     pub uri: String,
     /// URI of the next page, or null if there is no next page
     pub next_page_uri: Option<String>,
@@ -751,7 +851,7 @@ pub struct EndpointWebhookValidation {
     pub enabled: Option<bool>,
     /// a string indicating which webhook provider will be sending webhooks to this
     /// endpoint. Value must be one of the supported providers defined at
-    /// https://ngrok.com/docs/cloud-edge/modules/webhook
+    /// https://ngrok.com/docs/cloud-edge/modules/webhook-verification
     pub provider: String,
     /// a string secret used to validate requests from the given provider. All providers
     /// except AWS SNS require a secret
@@ -1225,6 +1325,42 @@ pub struct EndpointWebsocketTCPConverter {
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct EndpointUserAgentFilter {
+    pub enabled: Option<bool>,
+    pub allow: Vec<String>,
+    pub deny: Vec<String>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct EndpointPolicy {
+    /// `true` if the module will be applied to traffic, `false` to disable. default
+    /// `true` if unspecified
+    pub enabled: Option<bool>,
+    /// the inbound rules of the traffic policy.
+    pub inbound: Vec<EndpointRule>,
+    /// the outbound rules on the traffic policy.
+    pub outbound: Vec<EndpointRule>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct EndpointRule {
+    /// cel expressions that filter traffic the policy rule applies to.
+    pub expressions: Vec<String>,
+    /// the set of actions on a policy rule.
+    pub actions: Vec<EndpointAction>,
+    /// the name of the rule that is part of the traffic policy.
+    pub name: String,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct EndpointAction {
+    /// the type of action on the policy rule.
+    pub r#type: String,
+    /// the configuration for the action on the policy rule.
+    pub config: HashMap<String, serde_json::Value>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct EdgeRouteItem {
     /// unique identifier of this edge
     pub edge_id: String,
@@ -1269,6 +1405,9 @@ pub struct HTTPSEdgeRouteCreate {
     pub oidc: Option<EndpointOIDC>,
     /// websocket to tcp adapter configuration or `null`
     pub websocket_tcp_converter: Option<EndpointWebsocketTCPConverter>,
+    pub user_agent_filter: Option<EndpointUserAgentFilter>,
+    /// the traffic policy associated with this edge or null
+    pub policy: Option<EndpointPolicy>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -1310,6 +1449,9 @@ pub struct HTTPSEdgeRouteUpdate {
     pub oidc: Option<EndpointOIDC>,
     /// websocket to tcp adapter configuration or `null`
     pub websocket_tcp_converter: Option<EndpointWebsocketTCPConverter>,
+    pub user_agent_filter: Option<EndpointUserAgentFilter>,
+    /// the traffic policy associated with this edge or null
+    pub policy: Option<EndpointPolicy>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -1355,6 +1497,9 @@ pub struct HTTPSEdgeRoute {
     pub oidc: Option<EndpointOIDC>,
     /// websocket to tcp adapter configuration or `null`
     pub websocket_tcp_converter: Option<EndpointWebsocketTCPConverter>,
+    pub user_agent_filter: Option<EndpointUserAgentFilter>,
+    /// the traffic policy associated with this edge or null
+    pub policy: Option<EndpointPolicy>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -1453,6 +1598,12 @@ pub struct EdgeTLSTerminationAtEdgeReplace {
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct EdgePolicyReplace {
+    pub id: String,
+    pub module: EndpointPolicy,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct EdgeRouteBackendReplace {
     pub edge_id: String,
     pub id: String,
@@ -1530,6 +1681,20 @@ pub struct EdgeRouteWebsocketTCPConverterReplace {
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct EdgeRouteUserAgentFilterReplace {
+    pub edge_id: String,
+    pub id: String,
+    pub module: EndpointUserAgentFilter,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct EdgeRoutePolicyReplace {
+    pub edge_id: String,
+    pub id: String,
+    pub module: EndpointPolicy,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct TCPEdgeList {
     /// the list of all TCP Edges on this account
     pub tcp_edges: Vec<TCPEdge>,
@@ -1552,6 +1717,8 @@ pub struct TCPEdgeCreate {
     /// edge modules
     pub backend: Option<EndpointBackendMutate>,
     pub ip_restriction: Option<EndpointIPPolicyMutate>,
+    /// the traffic policy associated with this edge or null
+    pub policy: Option<EndpointPolicy>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -1569,6 +1736,8 @@ pub struct TCPEdgeUpdate {
     /// edge modules
     pub backend: Option<EndpointBackendMutate>,
     pub ip_restriction: Option<EndpointIPPolicyMutate>,
+    /// the traffic policy associated with this edge or null
+    pub policy: Option<EndpointPolicy>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -1590,6 +1759,8 @@ pub struct TCPEdge {
     /// edge modules
     pub backend: Option<EndpointBackend>,
     pub ip_restriction: Option<EndpointIPPolicy>,
+    /// the traffic policy associated with this edge or null
+    pub policy: Option<EndpointPolicy>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -1617,6 +1788,8 @@ pub struct TLSEdgeCreate {
     pub ip_restriction: Option<EndpointIPPolicyMutate>,
     pub mutual_tls: Option<EndpointMutualTLSMutate>,
     pub tls_termination: Option<EndpointTLSTermination>,
+    /// the traffic policy associated with this edge or null
+    pub policy: Option<EndpointPolicy>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -1636,6 +1809,8 @@ pub struct TLSEdgeUpdate {
     pub ip_restriction: Option<EndpointIPPolicyMutate>,
     pub mutual_tls: Option<EndpointMutualTLSMutate>,
     pub tls_termination: Option<EndpointTLSTermination>,
+    /// the traffic policy associated with this edge or null
+    pub policy: Option<EndpointPolicy>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -1659,6 +1834,8 @@ pub struct TLSEdge {
     pub ip_restriction: Option<EndpointIPPolicy>,
     pub mutual_tls: Option<EndpointMutualTLS>,
     pub tls_termination: Option<EndpointTLSTermination>,
+    /// the traffic policy associated with this edge or null
+    pub policy: Option<EndpointPolicy>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -2197,8 +2374,10 @@ pub struct ReservedAddrList {
 pub struct ReservedDomainCreate {
     /// hostname of the reserved domain
     pub domain: String,
-    /// reserve the domain in this geographic ngrok datacenter. Optional, default is us.
-    /// (au, eu, ap, us, jp, in, sa)
+    /// deprecated: With the launch of the ngrok Global Network domains traffic is now
+    /// handled globally. This field applied only to endpoints. Note that agents may
+    /// still connect to specific regions. Optional, null by default. (au, eu, ap, us,
+    /// jp, in, sa)
     pub region: String,
     /// human-readable description of what this reserved domain will be used for
     pub description: String,
@@ -2246,11 +2425,13 @@ pub struct ReservedDomain {
     pub metadata: String,
     /// hostname of the reserved domain
     pub domain: String,
-    /// reserve the domain in this geographic ngrok datacenter. Optional, default is us.
-    /// (au, eu, ap, us, jp, in, sa)
+    /// deprecated: With the launch of the ngrok Global Network domains traffic is now
+    /// handled globally. This field applied only to endpoints. Note that agents may
+    /// still connect to specific regions. Optional, null by default. (au, eu, ap, us,
+    /// jp, in, sa)
     pub region: String,
     /// DNS CNAME target for a custom hostname, or null if the reserved domain is a
-    /// subdomain of *.ngrok.io
+    /// subdomain of an ngrok owned domain (e.g. *.ngrok.app)
     pub cname_target: Option<String>,
     /// object referencing the TLS certificate used for connections to this domain. This
     /// can be either a user-uploaded certificate, the most recently issued automatic
