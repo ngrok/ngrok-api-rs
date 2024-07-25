@@ -1332,32 +1332,12 @@ pub struct EndpointUserAgentFilter {
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct EndpointPolicy {
+pub struct EndpointTrafficPolicy {
     /// `true` if the module will be applied to traffic, `false` to disable. default
     /// `true` if unspecified
     pub enabled: Option<bool>,
-    /// the inbound rules of the traffic policy.
-    pub inbound: Vec<EndpointRule>,
-    /// the outbound rules on the traffic policy.
-    pub outbound: Vec<EndpointRule>,
-}
-
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct EndpointRule {
-    /// cel expressions that filter traffic the policy rule applies to.
-    pub expressions: Vec<String>,
-    /// the set of actions on a policy rule.
-    pub actions: Vec<EndpointAction>,
-    /// the name of the rule that is part of the traffic policy.
-    pub name: String,
-}
-
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct EndpointAction {
-    /// the type of action on the policy rule.
-    pub r#type: String,
-    /// the configuration for the action on the policy rule.
-    pub config: HashMap<String, serde_json::Value>,
+    /// the traffic policy that should be applied to the traffic on your endpoint.
+    pub value: String,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -1407,7 +1387,7 @@ pub struct HTTPSEdgeRouteCreate {
     pub websocket_tcp_converter: Option<EndpointWebsocketTCPConverter>,
     pub user_agent_filter: Option<EndpointUserAgentFilter>,
     /// the traffic policy associated with this edge or null
-    pub policy: Option<EndpointPolicy>,
+    pub traffic_policy: Option<EndpointTrafficPolicy>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -1451,7 +1431,7 @@ pub struct HTTPSEdgeRouteUpdate {
     pub websocket_tcp_converter: Option<EndpointWebsocketTCPConverter>,
     pub user_agent_filter: Option<EndpointUserAgentFilter>,
     /// the traffic policy associated with this edge or null
-    pub policy: Option<EndpointPolicy>,
+    pub traffic_policy: Option<EndpointTrafficPolicy>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -1499,7 +1479,7 @@ pub struct HTTPSEdgeRoute {
     pub websocket_tcp_converter: Option<EndpointWebsocketTCPConverter>,
     pub user_agent_filter: Option<EndpointUserAgentFilter>,
     /// the traffic policy associated with this edge or null
-    pub policy: Option<EndpointPolicy>,
+    pub traffic_policy: Option<EndpointTrafficPolicy>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -1598,9 +1578,9 @@ pub struct EdgeTLSTerminationAtEdgeReplace {
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct EdgePolicyReplace {
+pub struct EdgeTrafficPolicyReplace {
     pub id: String,
-    pub module: EndpointPolicy,
+    pub module: EndpointTrafficPolicy,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -1688,10 +1668,10 @@ pub struct EdgeRouteUserAgentFilterReplace {
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
-pub struct EdgeRoutePolicyReplace {
+pub struct EdgeRouteTrafficPolicyReplace {
     pub edge_id: String,
     pub id: String,
-    pub module: EndpointPolicy,
+    pub module: EndpointTrafficPolicy,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -1718,7 +1698,7 @@ pub struct TCPEdgeCreate {
     pub backend: Option<EndpointBackendMutate>,
     pub ip_restriction: Option<EndpointIPPolicyMutate>,
     /// the traffic policy associated with this edge or null
-    pub policy: Option<EndpointPolicy>,
+    pub traffic_policy: Option<EndpointTrafficPolicy>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -1737,7 +1717,7 @@ pub struct TCPEdgeUpdate {
     pub backend: Option<EndpointBackendMutate>,
     pub ip_restriction: Option<EndpointIPPolicyMutate>,
     /// the traffic policy associated with this edge or null
-    pub policy: Option<EndpointPolicy>,
+    pub traffic_policy: Option<EndpointTrafficPolicy>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -1760,7 +1740,7 @@ pub struct TCPEdge {
     pub backend: Option<EndpointBackend>,
     pub ip_restriction: Option<EndpointIPPolicy>,
     /// the traffic policy associated with this edge or null
-    pub policy: Option<EndpointPolicy>,
+    pub traffic_policy: Option<EndpointTrafficPolicy>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -1789,7 +1769,7 @@ pub struct TLSEdgeCreate {
     pub mutual_tls: Option<EndpointMutualTLSMutate>,
     pub tls_termination: Option<EndpointTLSTermination>,
     /// the traffic policy associated with this edge or null
-    pub policy: Option<EndpointPolicy>,
+    pub traffic_policy: Option<EndpointTrafficPolicy>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -1810,7 +1790,7 @@ pub struct TLSEdgeUpdate {
     pub mutual_tls: Option<EndpointMutualTLSMutate>,
     pub tls_termination: Option<EndpointTLSTermination>,
     /// the traffic policy associated with this edge or null
-    pub policy: Option<EndpointPolicy>,
+    pub traffic_policy: Option<EndpointTrafficPolicy>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -1835,7 +1815,7 @@ pub struct TLSEdge {
     pub mutual_tls: Option<EndpointMutualTLS>,
     pub tls_termination: Option<EndpointTLSTermination>,
     /// the traffic policy associated with this edge or null
-    pub policy: Option<EndpointPolicy>,
+    pub traffic_policy: Option<EndpointTrafficPolicy>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -1955,6 +1935,7 @@ pub struct EventTarget {
     pub cloudwatch_logs: Option<EventTargetCloudwatchLogs>,
     /// Configuration used to send events to Datadog.
     pub datadog: Option<EventTargetDatadog>,
+    pub azure_logs_ingestion: Option<EventTargetAzureLogsIngestion>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -1996,6 +1977,22 @@ pub struct EventTargetDatadog {
     pub service: Option<String>,
     /// Datadog site to send event to.
     pub ddsite: Option<String>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct EventTargetAzureLogsIngestion {
+    /// Tenant ID for the Azure account
+    pub tenant_id: String,
+    /// Client ID for the application client
+    pub client_id: String,
+    /// Client Secret for the application client
+    pub client_secret: String,
+    /// Data collection endpoint logs ingestion URI
+    pub logs_ingestion_uri: String,
+    /// Data collection rule immutable ID
+    pub data_collection_rule_id: String,
+    /// Data collection stream name to use as destination, located instide the DCR
+    pub data_collection_stream_name: String,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
