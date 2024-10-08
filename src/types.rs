@@ -1832,13 +1832,18 @@ pub struct Endpoint {
     pub public_url: String,
     /// protocol served by this endpoint. one of `http`, `https`, `tcp`, or `tls`
     pub proto: String,
-    /// hostport served by this endpoint (hostname:port)
+    pub scheme: String,
+    /// hostport served by this endpoint (hostname:port) -> soon to be deprecated
     pub hostport: String,
+    pub host: String,
+    pub port: i64,
     /// whether the endpoint is `ephemeral` (served directly by an agent-initiated
-    /// tunnel) or `edge` (served by an edge)
+    /// tunnel) or `edge` (served by an edge) or `cloud (represents a cloud endpoint)`
     pub r#type: String,
     /// user-supplied metadata of the associated tunnel or edge object
     pub metadata: String,
+    /// user-supplied description of the associated tunnel
+    pub description: String,
     /// the domain reserved for this endpoint
     pub domain: Option<Ref>,
     /// the address reserved for this endpoint
@@ -1847,6 +1852,22 @@ pub struct Endpoint {
     pub tunnel: Option<Ref>,
     /// the edge serving requests to this endpoint, if this is an edge endpoint
     pub edge: Option<Ref>,
+    /// the local address the tunnel forwards to
+    pub upstream_url: String,
+    /// the protocol the agent uses to forward with
+    pub upstream_proto: String,
+    /// the url of the endpoint
+    pub url: String,
+    /// The ID of the owner (bot or user) that owns this endpoint
+    pub principal_id: Option<Ref>,
+    /// The traffic policy attached to this endpoint
+    pub traffic_policy: String,
+    /// the bindings associated with this endpoint
+    pub bindings: Option<Vec<String>>,
+    /// The tunnel session of the agent for this endpoint
+    pub tunnel_session: Option<Ref>,
+    /// URI of the clep API resource
+    pub uri: String,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -1991,7 +2012,7 @@ pub struct EventTargetAzureLogsIngestion {
     pub logs_ingestion_uri: String,
     /// Data collection rule immutable ID
     pub data_collection_rule_id: String,
-    /// Data collection stream name to use as destination, located instide the DCR
+    /// Data collection stream name to use as destination, located inside the DCR
     pub data_collection_stream_name: String,
 }
 
