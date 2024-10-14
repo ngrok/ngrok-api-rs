@@ -1,0 +1,124 @@
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+name: Continuous integration
+
+jobs:
+  udeps:
+    name: Udeps
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: jrobsonchase/direnv-action@v0.7
+      - uses: ./.github/workflows/rust-cache
+      - uses: actions-rs/cargo@v1
+        with:
+          command: udeps
+          args: --workspace --all-targets --all-features
+
+  fmt:
+    name: Rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: jrobsonchase/direnv-action@v0.7
+      - uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check
+
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: jrobsonchase/direnv-action@v0.7
+      - uses: ./.github/workflows/rust-cache
+      - uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --all-targets --all-features --workspace -- -D warnings
+
+  test-nix:
+    name: Test Nix
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: jrobsonchase/direnv-action@v0.7
+      - uses: ./.github/workflows/rust-cache
+      - uses: actions-rs/cargo@v1
+        env:
+          NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
+        with:
+          command: test
+          args: --workspace --all-targets
+
+  test-stable:
+    name: Test Stable
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      # We don't actualy have sccache installed here (yet), but it still
+      # benefits from the cargo cache.
+      - uses: ./.github/workflows/rust-cache
+      - uses: actions-rs/cargo@v1
+        env:
+          NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
+        with:
+          command: test
+          args: --workspace --all-targets
+
+  test-win:
+    name: Test Windows Stable
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      # We don't actualy have sccache installed here (yet), but it still
+      # benefits from the cargo cache.
+      - uses: ./.github/workflows/rust-cache
+      - uses: actions-rs/cargo@v1
+        env:
+          NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
+        with:
+          command: test
+          args: --workspace --all-targets
+
+  semver:
+    name: Semver Check
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        crate: [ngrok-api]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: jrobsonchase/direnv-action@v0.7
+      - uses: ./.github/workflows/rust-cache
+      - uses: actions-rs/cargo@v1
+        name: semver checks
+        with:
+          command: semver-checks
+          args: check-release -p ${{ matrix.crate }}
+
+  publish-ngrok-api:
+    name: Publish ngrok-api
+    uses: ./.github/workflows/release.yml
+    needs: [udeps, fmt, clippy, test-nix, test-stable, test-win, semver]
+    if: github.ref_name == 'main' && github.repository == 'ngrok/ngrok-api-rs'
+    permissions:
+      contents: write
+    with:
+      crate: ngrok-api
+    secrets:
+      CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
