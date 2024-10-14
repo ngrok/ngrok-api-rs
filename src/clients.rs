@@ -5723,6 +5723,70 @@ pub mod edge_modules {
         }
     }
 
+    pub mod https_edge_route_traffic_policy {
+        use crate::types;
+        use crate::Error;
+
+        #[derive(Debug, Clone)]
+        pub struct Client {
+            c: crate::Client,
+        }
+
+        impl Client {
+            pub fn new(c: crate::Client) -> Self {
+                Self { c }
+            }
+
+            pub async fn replace(
+                &self,
+                req: &types::EdgeRouteTrafficPolicyReplace,
+            ) -> Result<types::EndpointTrafficPolicy, Error> {
+                self.c
+                    .make_request(
+                        &format!(
+                            "/edges/https/{edge_id}/routes/{id}/traffic_policy",
+                            edge_id = req.edge_id,
+                            id = req.id
+                        ),
+                        reqwest::Method::PUT,
+                        Some(req),
+                    )
+                    .await
+            }
+
+            pub async fn get(
+                &self,
+                req: &types::EdgeRouteItem,
+            ) -> Result<types::EndpointTrafficPolicy, Error> {
+                self.c
+                    .make_request(
+                        &format!(
+                            "/edges/https/{edge_id}/routes/{id}/traffic_policy",
+                            edge_id = req.edge_id,
+                            id = req.id
+                        ),
+                        reqwest::Method::GET,
+                        None::<Option<()>>,
+                    )
+                    .await
+            }
+
+            pub async fn delete(&self, req: &types::EdgeRouteItem) -> Result<(), Error> {
+                self.c
+                    .make_request(
+                        &format!(
+                            "/edges/https/{edge_id}/routes/{id}/traffic_policy",
+                            edge_id = req.edge_id,
+                            id = req.id
+                        ),
+                        reqwest::Method::DELETE,
+                        None::<Option<()>>,
+                    )
+                    .await
+            }
+        }
+    }
+
     pub mod tcp_edge_backend {
         use crate::types;
         use crate::Error;
@@ -5813,6 +5877,55 @@ pub mod edge_modules {
                 self.c
                     .make_request(
                         &format!("/edges/tcp/{id}/ip_restriction", id = id),
+                        reqwest::Method::DELETE,
+                        None::<Option<()>>,
+                    )
+                    .await
+            }
+        }
+    }
+
+    pub mod tcp_edge_traffic_policy {
+        use crate::types;
+        use crate::Error;
+
+        #[derive(Debug, Clone)]
+        pub struct Client {
+            c: crate::Client,
+        }
+
+        impl Client {
+            pub fn new(c: crate::Client) -> Self {
+                Self { c }
+            }
+
+            pub async fn replace(
+                &self,
+                req: &types::EdgeTrafficPolicyReplace,
+            ) -> Result<types::EndpointTrafficPolicy, Error> {
+                self.c
+                    .make_request(
+                        &format!("/edges/tcp/{id}/traffic_policy", id = req.id),
+                        reqwest::Method::PUT,
+                        Some(req),
+                    )
+                    .await
+            }
+
+            pub async fn get(&self, id: &str) -> Result<types::EndpointTrafficPolicy, Error> {
+                self.c
+                    .make_request(
+                        &format!("/edges/tcp/{id}/traffic_policy", id = id),
+                        reqwest::Method::GET,
+                        None::<Option<()>>,
+                    )
+                    .await
+            }
+
+            pub async fn delete(&self, id: &str) -> Result<(), Error> {
+                self.c
+                    .make_request(
+                        &format!("/edges/tcp/{id}/traffic_policy", id = id),
                         reqwest::Method::DELETE,
                         None::<Option<()>>,
                     )
@@ -6016,6 +6129,55 @@ pub mod edge_modules {
             }
         }
     }
+
+    pub mod tls_edge_traffic_policy {
+        use crate::types;
+        use crate::Error;
+
+        #[derive(Debug, Clone)]
+        pub struct Client {
+            c: crate::Client,
+        }
+
+        impl Client {
+            pub fn new(c: crate::Client) -> Self {
+                Self { c }
+            }
+
+            pub async fn replace(
+                &self,
+                req: &types::EdgeTrafficPolicyReplace,
+            ) -> Result<types::EndpointTrafficPolicy, Error> {
+                self.c
+                    .make_request(
+                        &format!("/edges/tls/{id}/traffic_policy", id = req.id),
+                        reqwest::Method::PUT,
+                        Some(req),
+                    )
+                    .await
+            }
+
+            pub async fn get(&self, id: &str) -> Result<types::EndpointTrafficPolicy, Error> {
+                self.c
+                    .make_request(
+                        &format!("/edges/tls/{id}/traffic_policy", id = id),
+                        reqwest::Method::GET,
+                        None::<Option<()>>,
+                    )
+                    .await
+            }
+
+            pub async fn delete(&self, id: &str) -> Result<(), Error> {
+                self.c
+                    .make_request(
+                        &format!("/edges/tls/{id}/traffic_policy", id = id),
+                        reqwest::Method::DELETE,
+                        None::<Option<()>>,
+                    )
+                    .await
+            }
+        }
+    }
     impl Client {
         pub fn https_edge_mutual_tls(&self) -> https_edge_mutual_tls::Client {
             https_edge_mutual_tls::Client::new(self.c.clone())
@@ -6067,11 +6229,17 @@ pub mod edge_modules {
         ) -> https_edge_route_user_agent_filter::Client {
             https_edge_route_user_agent_filter::Client::new(self.c.clone())
         }
+        pub fn https_edge_route_traffic_policy(&self) -> https_edge_route_traffic_policy::Client {
+            https_edge_route_traffic_policy::Client::new(self.c.clone())
+        }
         pub fn tcp_edge_backend(&self) -> tcp_edge_backend::Client {
             tcp_edge_backend::Client::new(self.c.clone())
         }
         pub fn tcp_edge_ip_restriction(&self) -> tcp_edge_ip_restriction::Client {
             tcp_edge_ip_restriction::Client::new(self.c.clone())
+        }
+        pub fn tcp_edge_traffic_policy(&self) -> tcp_edge_traffic_policy::Client {
+            tcp_edge_traffic_policy::Client::new(self.c.clone())
         }
         pub fn tls_edge_backend(&self) -> tls_edge_backend::Client {
             tls_edge_backend::Client::new(self.c.clone())
@@ -6084,6 +6252,9 @@ pub mod edge_modules {
         }
         pub fn tls_edge_tls_termination(&self) -> tls_edge_tls_termination::Client {
             tls_edge_tls_termination::Client::new(self.c.clone())
+        }
+        pub fn tls_edge_traffic_policy(&self) -> tls_edge_traffic_policy::Client {
+            tls_edge_traffic_policy::Client::new(self.c.clone())
         }
     }
 }
