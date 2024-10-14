@@ -23,6 +23,7 @@
             inputs.fenix.overlays.default
           ];
         };
+        lib = nixpkgs.lib;
         toolchain = pkgs.fenix.complete.withComponents [
           "cargo"
           "clippy"
@@ -61,6 +62,7 @@
             cargo-udeps
           ];
           RUST_SRC_PATH = "${pkgs.rustPlatform.rustLibSrc}";
+          LD_LIBRARY_PATH = lib.makeLibraryPath [ pkgs.openssl ];
         };
       }
     );
