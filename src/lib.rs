@@ -1,3 +1,5 @@
+#![allow(clippy::too_long_first_doc_paragraph)]
+
 use url::Url;
 
 mod clients;
@@ -47,7 +49,7 @@ impl ClientBuilder {
             api_url: self
                 .api_url
                 .unwrap_or_else(|| Url::parse("https://api.ngrok.com").unwrap()),
-            c: self.reqwest_client.unwrap_or_else(reqwest::Client::new),
+            c: self.reqwest_client.unwrap_or_default(),
         }
     }
 }
