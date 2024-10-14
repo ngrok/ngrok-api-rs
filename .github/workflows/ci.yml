@@ -41,6 +41,20 @@ jobs:
           command: clippy
           args: --all-targets --all-features --workspace -- -D warnings
 
+  test-docs:
+    name: Test Docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: jrobsonchase/direnv-action@v0.7
+      - uses: ./.github/workflows/rust-cache
+      - uses: actions-rs/cargo@v1
+        env:
+          NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
+        with:
+          command: test
+          args: --doc
+
   test-nix:
     name: Test Nix
     runs-on: ubuntu-latest
