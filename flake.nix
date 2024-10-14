@@ -3,45 +3,62 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
-    flake-utils.url = "github:numtide/flake-utils";
-    naersk = {
-      url = "github:nix-community/naersk";
+
+    # Note: fenix packages are cached via cachix:
+    #       cachix use nix-community
+    fenix = {
+      url = "github:nix-community/fenix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, naersk, flake-utils }:
-    let
-      cargoToml = builtins.fromTOML (builtins.readFile ./Cargo.toml);
-      name = cargoToml.package.name;
-    in
+  outputs = { self, nixpkgs, flake-utils, ... }@inputs:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs {
           inherit system;
-        };
-        naersk-lib = naersk.lib.${system};
-        defaultPackage = naersk-lib.buildPackage {
-          pname = name;
-          root = ./.;
-          nativeBuildInputs = with pkgs; [
-            pkg-config
-            openssl
+          overlays = [
+            inputs.fenix.overlays.default
           ];
         };
+        toolchain = pkgs.fenix.complete.withComponents [
+          "cargo"
+          "clippy"
+          "rust-src"
+          "rustc"
+          "rustfmt"
+          "rust-analyzer"
+        ];
+        # Make sure that cargo semver-checks uses the stable toolchain rather
+        # than the nightly one that we normally develop with.
+        semver-checks = with pkgs; symlinkJoin {
+          name = "cargo-semver-checks";
+          paths = [ cargo-semver-checks ];
+          buildInputs = [ makeWrapper ];
+          postBuild = ''
+            wrapProgram $out/bin/cargo-semver-checks \
+              --prefix PATH : ${rustc}/bin \
+              --prefix PATH : ${cargo}/bin
+          '';
+        };
+        extract-version = with pkgs; writeShellScriptBin "extract-crate-version" ''
+          ${cargo}/bin/cargo metadata --format-version 1 --no-deps | \
+            ${jq}/bin/jq -r ".packages[] | select(.name == \"$1\") | .version"
+        '';
       in
-      rec {
-        inherit defaultPackage;
-
-        packages = builtins.listToAttrs [{ inherit name; value = defaultPackage; }];
-
+      {
         devShell = pkgs.mkShell {
-          inputsFrom = [ defaultPackage ];
-          buildInputs = with pkgs; [
-            pkgs.rust-analyzer
-            pkgs.clippy
-            pkgs.cargo
-            pkgs.rustc
+          packages = with pkgs; [
+            # Needed to build the ngrok-api crate
+            pkg-config
+            openssl
+
+            toolchain
+            semver-checks
+            extract-version
+            cargo-udeps
           ];
           RUST_SRC_PATH = "${pkgs.rustPlatform.rustLibSrc}";
         };
