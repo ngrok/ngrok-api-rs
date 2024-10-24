@@ -1859,7 +1859,7 @@ pub struct Endpoint {
     /// the url of the endpoint
     pub url: String,
     /// The ID of the owner (bot or user) that owns this endpoint
-    pub principal_id: Option<Ref>,
+    pub principal: Option<Ref>,
     /// The traffic policy attached to this endpoint
     pub traffic_policy: String,
     /// the bindings associated with this endpoint
@@ -1868,6 +1868,8 @@ pub struct Endpoint {
     pub tunnel_session: Option<Ref>,
     /// URI of the clep API resource
     pub uri: String,
+    /// user supplied name for the endpoint
+    pub name: String,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -1878,6 +1880,39 @@ pub struct EndpointList {
     pub uri: String,
     /// URI of the next page, or null if there is no next page
     pub next_page_uri: Option<String>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct EndpointCreate {
+    /// the url of the endpoint
+    pub url: String,
+    /// whether the endpoint is `ephemeral` (served directly by an agent-initiated
+    /// tunnel) or `edge` (served by an edge) or `cloud (represents a cloud endpoint)`
+    pub r#type: String,
+    /// The traffic policy attached to this endpoint
+    pub traffic_policy: String,
+    /// user-supplied description of the associated tunnel
+    pub description: Option<String>,
+    /// user-supplied metadata of the associated tunnel or edge object
+    pub metadata: Option<String>,
+    /// the bindings associated with this endpoint
+    pub bindings: Option<Vec<String>>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct EndpointUpdate {
+    /// unique endpoint resource identifier
+    pub id: String,
+    /// the url of the endpoint
+    pub url: Option<String>,
+    /// The traffic policy attached to this endpoint
+    pub traffic_policy: Option<String>,
+    /// user-supplied description of the associated tunnel
+    pub description: Option<String>,
+    /// user-supplied metadata of the associated tunnel or edge object
+    pub metadata: Option<String>,
+    /// the bindings associated with this endpoint
+    pub bindings: Option<Vec<String>>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -2483,8 +2518,8 @@ pub struct ReservedDomainCertPolicy {
     /// certificate authority to request certificates from. The only supported value is
     /// letsencrypt.
     pub authority: String,
-    /// type of private key to use when requesting certificates. Defaults to rsa, can be
-    /// either rsa or ecdsa.
+    /// type of private key to use when requesting certificates. Defaults to ecdsa, can
+    /// be either rsa or ecdsa.
     pub private_key_type: String,
 }
 
