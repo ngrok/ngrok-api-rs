@@ -1298,6 +1298,13 @@ pub mod endpoints {
             Self { c }
         }
 
+        /// Create an endpoint, currently available only for cloud endpoints
+        pub async fn create(&self, req: &types::EndpointCreate) -> Result<types::Endpoint, Error> {
+            self.c
+                .make_request("/endpoints", reqwest::Method::POST, Some(req))
+                .await
+        }
+
         /// Get a single page without pagination. Prefer using list
         /// which will do pagination for you.
         pub(crate) async fn list_page(
@@ -1323,6 +1330,28 @@ pub mod endpoints {
                 .make_request(
                     &format!("/endpoints/{id}", id = id),
                     reqwest::Method::GET,
+                    None::<Option<()>>,
+                )
+                .await
+        }
+
+        /// Update an Endpoint by ID, currently available only for cloud endpoints
+        pub async fn update(&self, req: &types::EndpointUpdate) -> Result<types::Endpoint, Error> {
+            self.c
+                .make_request(
+                    &format!("/endpoints/{id}", id = req.id),
+                    reqwest::Method::PATCH,
+                    Some(req),
+                )
+                .await
+        }
+
+        /// Delete an Endpoint by ID, currently available only for cloud endpoints
+        pub async fn delete(&self, id: &str) -> Result<(), Error> {
+            self.c
+                .make_request(
+                    &format!("/endpoints/{id}", id = id),
+                    reqwest::Method::DELETE,
                     None::<Option<()>>,
                 )
                 .await
