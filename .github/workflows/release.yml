@@ -35,6 +35,7 @@ jobs:
       - name: tag release
         run: |
           version="$(extract-crate-version ${{inputs.crate}})"
+          unset LD_LIBRARY_PATH
           git config user.name "GitHub Action"
           git config user.email noreply@ngrok.com
           git tag -a -m "Version ${version}" ${{inputs.crate}}-v${version}
