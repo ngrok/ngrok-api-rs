@@ -2215,6 +2215,246 @@ pub mod ip_restrictions {
     }
 }
 
+/// KubernetesOperators is used by the Kubernetes Operator to register and
+///  manage its own resource, as well as for users to see active kubernetes
+///  clusters.
+pub mod kubernetes_operators {
+    use crate::types;
+    use crate::Error;
+    use futures::{Stream, TryStreamExt};
+
+    /// KubernetesOperators is used by the Kubernetes Operator to register and
+    ///  manage its own resource, as well as for users to see active kubernetes
+    ///  clusters.
+    #[derive(Debug, Clone)]
+    pub struct Client {
+        c: crate::Client,
+    }
+    /// Provides streams of pages of [types::KubernetesOperatorList], or of [types::KubernetesOperator] directly.
+    pub struct List {
+        c: std::sync::Arc<Client>,
+        req: types::Paging,
+    }
+
+    impl List {
+        /// Iterate over [types::KubernetesOperatorList].
+        ///
+        /// See [Tokio Streams](https://tokio.rs/tokio/tutorial/streams)
+        /// documentation for more info on usage.
+        pub async fn pages(
+            self,
+        ) -> impl Stream<Item = Result<types::KubernetesOperatorList, Error>> + Unpin {
+            struct State {
+                c: std::sync::Arc<Client>,
+                req: types::Paging,
+                init: bool,
+                cur_uri: Option<String>,
+            }
+
+            let s = State {
+                c: self.c,
+                req: self.req,
+                init: true,
+                cur_uri: None,
+            };
+
+            Box::pin(futures::stream::unfold(s, |s| async move {
+                let page_resp = match (s.init, &s.cur_uri) {
+                    (true, _) => s.c.list_page(&s.req).await,
+                    (false, None) => {
+                        return None;
+                    }
+                    (false, Some(uri)) => s.c.c.get_by_uri(uri).await,
+                };
+                match page_resp {
+                    Err(e) => Some((Err(e), s)),
+                    Ok(page) => {
+                        let next = page.next_page_uri.clone();
+                        Some((
+                            Ok(page),
+                            State {
+                                init: false,
+                                cur_uri: next,
+                                ..s
+                            },
+                        ))
+                    }
+                }
+            }))
+        }
+
+        /// Iterate over [types::KubernetesOperator] items.
+        ///
+        /// See [Tokio Streams](https://tokio.rs/tokio/tutorial/streams)
+        /// documentation for more info on usage.
+        pub async fn operators(
+            self,
+        ) -> impl Stream<Item = Result<types::KubernetesOperator, Error>> + Unpin {
+            self.pages()
+                .await
+                .map_ok(|page| futures::stream::iter(page.operators.into_iter().map(Ok)))
+                .try_flatten()
+        }
+    }
+
+    /// Provides streams of pages of [types::EndpointList], or of [types::Endpoint] directly.
+    pub struct GetBoundEndpoints {
+        c: std::sync::Arc<Client>,
+        req: types::ItemPaging,
+    }
+
+    impl GetBoundEndpoints {
+        /// Iterate over [types::EndpointList].
+        ///
+        /// See [Tokio Streams](https://tokio.rs/tokio/tutorial/streams)
+        /// documentation for more info on usage.
+        pub async fn pages(self) -> impl Stream<Item = Result<types::EndpointList, Error>> + Unpin {
+            struct State {
+                c: std::sync::Arc<Client>,
+                req: types::ItemPaging,
+                init: bool,
+                cur_uri: Option<String>,
+            }
+
+            let s = State {
+                c: self.c,
+                req: self.req,
+                init: true,
+                cur_uri: None,
+            };
+
+            Box::pin(futures::stream::unfold(s, |s| async move {
+                let page_resp = match (s.init, &s.cur_uri) {
+                    (true, _) => s.c.get_bound_endpoints_page(&s.req).await,
+                    (false, None) => {
+                        return None;
+                    }
+                    (false, Some(uri)) => s.c.c.get_by_uri(uri).await,
+                };
+                match page_resp {
+                    Err(e) => Some((Err(e), s)),
+                    Ok(page) => {
+                        let next = page.next_page_uri.clone();
+                        Some((
+                            Ok(page),
+                            State {
+                                init: false,
+                                cur_uri: next,
+                                ..s
+                            },
+                        ))
+                    }
+                }
+            }))
+        }
+
+        /// Iterate over [types::Endpoint] items.
+        ///
+        /// See [Tokio Streams](https://tokio.rs/tokio/tutorial/streams)
+        /// documentation for more info on usage.
+        pub async fn endpoints(self) -> impl Stream<Item = Result<types::Endpoint, Error>> + Unpin {
+            self.pages()
+                .await
+                .map_ok(|page| futures::stream::iter(page.endpoints.into_iter().map(Ok)))
+                .try_flatten()
+        }
+    }
+
+    impl Client {
+        pub fn new(c: crate::Client) -> Self {
+            Self { c }
+        }
+
+        /// Create a new Kubernetes Operator
+        pub async fn create(
+            &self,
+            req: &types::KubernetesOperatorCreate,
+        ) -> Result<types::KubernetesOperator, Error> {
+            self.c
+                .make_request("/kubernetes_operators", reqwest::Method::POST, Some(req))
+                .await
+        }
+
+        /// Update an existing Kubernetes operator by ID.
+        pub async fn update(
+            &self,
+            req: &types::KubernetesOperatorUpdate,
+        ) -> Result<types::KubernetesOperator, Error> {
+            self.c
+                .make_request(
+                    &format!("/kubernetes_operators/{id}", id = req.id),
+                    reqwest::Method::PATCH,
+                    Some(req),
+                )
+                .await
+        }
+
+        /// Delete a Kubernetes Operator
+        pub async fn delete(&self, id: &str) -> Result<(), Error> {
+            self.c
+                .make_request(
+                    &format!("/kubernetes_operators/{id}", id = id),
+                    reqwest::Method::DELETE,
+                    None::<Option<()>>,
+                )
+                .await
+        }
+
+        /// Get of a Kubernetes Operator
+        pub async fn get(&self, id: &str) -> Result<types::KubernetesOperator, Error> {
+            self.c
+                .make_request(
+                    &format!("/kubernetes_operators/{id}", id = id),
+                    reqwest::Method::GET,
+                    None::<Option<()>>,
+                )
+                .await
+        }
+
+        /// Get a single page without pagination. Prefer using list
+        /// which will do pagination for you.
+        pub(crate) async fn list_page(
+            &self,
+            req: &types::Paging,
+        ) -> Result<types::KubernetesOperatorList, Error> {
+            self.c
+                .make_request("/kubernetes_operators", reqwest::Method::GET, Some(req))
+                .await
+        }
+
+        /// List all Kubernetes Operators owned by this account
+        pub fn list(&self, req: types::Paging) -> List {
+            List {
+                c: std::sync::Arc::new(self.clone()),
+                req,
+            }
+        }
+
+        /// Get a single page without pagination. Prefer using get_bound_endpoints
+        /// which will do pagination for you.
+        pub(crate) async fn get_bound_endpoints_page(
+            &self,
+            req: &types::ItemPaging,
+        ) -> Result<types::EndpointList, Error> {
+            self.c
+                .make_request(
+                    &format!("/kubernetes_operators/{id}/bound_endpoints", id = req.id),
+                    reqwest::Method::GET,
+                    Some(req),
+                )
+                .await
+        }
+
+        /// List Endpoints bound to a Kubernetes Operator
+        pub fn get_bound_endpoints(&self, req: types::ItemPaging) -> GetBoundEndpoints {
+            GetBoundEndpoints {
+                c: std::sync::Arc::new(self.clone()),
+                req,
+            }
+        }
+    }
+}
+
 /// Reserved Addresses are TCP addresses that can be used to listen for traffic.
 ///  TCP address hostnames and ports are assigned by ngrok, they cannot be
 ///  chosen.
@@ -3495,6 +3735,9 @@ impl Client {
     }
     pub fn ip_restrictions(&self) -> ip_restrictions::Client {
         ip_restrictions::Client::new(self.clone())
+    }
+    pub fn kubernetes_operators(&self) -> kubernetes_operators::Client {
+        kubernetes_operators::Client::new(self.clone())
     }
     pub fn reserved_addrs(&self) -> reserved_addrs::Client {
         reserved_addrs::Client::new(self.clone())
