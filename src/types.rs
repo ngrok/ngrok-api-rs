@@ -16,6 +16,14 @@ pub struct Paging {
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct ItemPaging {
+    /// a resource identifier
+    pub id: String,
+    pub before_id: Option<String>,
+    pub limit: Option<String>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct Error {
     pub error_code: String,
     pub status_code: i32,
@@ -1855,13 +1863,11 @@ pub struct Endpoint {
     /// the local address the tunnel forwards to
     pub upstream_url: String,
     /// the protocol the agent uses to forward with
-    pub upstream_proto: String,
+    pub upstream_protocol: String,
     /// the url of the endpoint
     pub url: String,
     /// The ID of the owner (bot or user) that owns this endpoint
     pub principal: Option<Ref>,
-    /// TODO: deprecate me!
-    pub principal_id: Option<Ref>,
     /// The traffic policy attached to this endpoint
     pub traffic_policy: String,
     /// the bindings associated with this endpoint
@@ -1872,6 +1878,8 @@ pub struct Endpoint {
     pub uri: String,
     /// user supplied name for the endpoint
     pub name: String,
+    /// whether the endpoint allows pooling
+    pub pooling_enabled: bool,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -1888,8 +1896,8 @@ pub struct EndpointList {
 pub struct EndpointCreate {
     /// the url of the endpoint
     pub url: String,
-    /// whether the endpoint is `ephemeral` (served directly by an agent-initiated
-    /// tunnel) or `edge` (served by an edge) or `cloud (represents a cloud endpoint)`
+    /// Type of endpoint. Only 'cloud' is currently supported (represents a cloud
+    /// endpoint). Defaults to 'cloud' if not specified.
     pub r#type: String,
     /// The traffic policy attached to this endpoint
     pub traffic_policy: String,
@@ -1899,6 +1907,7 @@ pub struct EndpointCreate {
     pub metadata: Option<String>,
     /// the bindings associated with this endpoint
     pub bindings: Option<Vec<String>>,
+    pub pooling_enabled: bool,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -1915,6 +1924,7 @@ pub struct EndpointUpdate {
     pub metadata: Option<String>,
     /// the bindings associated with this endpoint
     pub bindings: Option<Vec<String>>,
+    pub pooling_enabled: bool,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -2368,6 +2378,154 @@ pub struct IPRestrictionList {
     /// the list of all IP restrictions on this account
     pub ip_restrictions: Vec<IPRestriction>,
     /// URI of the IP restrictions list API resource
+    pub uri: String,
+    /// URI of the next page, or null if there is no next page
+    pub next_page_uri: Option<String>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct KubernetesOperatorCreate {
+    /// human-readable description of this Kubernetes Operator. optional, max 255 bytes.
+    pub description: String,
+    /// arbitrary user-defined machine-readable data of this Kubernetes Operator.
+    /// optional, max 4096 bytes.
+    pub metadata: String,
+    /// features enabled for this Kubernetes Operator. a subset of "bindings",
+    /// "ingress", and "gateway"
+    pub enabled_features: Vec<String>,
+    /// the ngrok region in which the ingress for this operator is served. defaults to
+    /// "global"
+    pub region: String,
+    /// information about the deployment of this Kubernetes Operator
+    pub deployment: KubernetesOperatorDeployment,
+    /// configuration for the Bindings feature of this Kubernetes Operator. set only if
+    /// enabling the "bindings" feature
+    pub binding: Option<KubernetesOperatorBindingCreate>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct KubernetesOperatorBindingCreate {
+    /// the list of cel expressions that filter the k8s bound endpoints for this
+    /// operator
+    pub endpoint_selectors: Vec<String>,
+    /// CSR is supplied during initial creation to enable creating a mutual TLS secured
+    /// connection between ngrok and the operator. This is an internal implementation
+    /// detail and subject to change.
+    pub csr: String,
+    /// the public ingress endpoint for this Kubernetes Operator
+    pub ingress_endpoint: Option<String>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct KubernetesOperatorUpdate {
+    /// unique identifier for this Kubernetes Operator
+    pub id: String,
+    /// human-readable description of this Kubernetes Operator. optional, max 255 bytes.
+    pub description: Option<String>,
+    /// arbitrary user-defined machine-readable data of this Kubernetes Operator.
+    /// optional, max 4096 bytes.
+    pub metadata: Option<String>,
+    /// features enabled for this Kubernetes Operator. a subset of "bindings",
+    /// "ingress", and "gateway"
+    pub enabled_features: Option<Vec<String>>,
+    /// the ngrok region in which the ingress for this operator is served. defaults to
+    /// "global"
+    pub region: Option<String>,
+    /// configuration for the Bindings feature of this Kubernetes Operator. set only if
+    /// enabling the "bindings" feature
+    pub binding: Option<KubernetesOperatorBindingUpdate>,
+    /// configuration for the Deployment info
+    pub deployment: Option<KubernetesOperatorDeploymentUpdate>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct KubernetesOperatorBindingUpdate {
+    /// the list of cel expressions that filter the k8s bound endpoints for this
+    /// operator
+    pub endpoint_selectors: Option<Vec<String>>,
+    /// CSR is supplied during initial creation to enable creating a mutual TLS secured
+    /// connection between ngrok and the operator. This is an internal implementation
+    /// detail and subject to change.
+    pub csr: Option<String>,
+    /// the public ingress endpoint for this Kubernetes Operator
+    pub ingress_endpoint: Option<String>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct KubernetesOperatorDeploymentUpdate {
+    /// the deployment name
+    pub name: Option<String>,
+    /// the version of this Kubernetes Operator
+    pub version: Option<String>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct KubernetesOperator {
+    /// unique identifier for this Kubernetes Operator
+    pub id: String,
+    /// URI of this Kubernetes Operator API resource
+    pub uri: String,
+    /// timestamp when the Kubernetes Operator was created. RFC 3339 format
+    pub created_at: String,
+    /// timestamp when the Kubernetes Operator was last updated. RFC 3339 format
+    pub updated_at: String,
+    /// human-readable description of this Kubernetes Operator. optional, max 255 bytes.
+    pub description: String,
+    /// arbitrary user-defined machine-readable data of this Kubernetes Operator.
+    /// optional, max 4096 bytes.
+    pub metadata: String,
+    /// the principal who created this Kubernetes Operator
+    pub principal: Ref,
+    /// features enabled for this Kubernetes Operator. a subset of "bindings",
+    /// "ingress", and "gateway"
+    pub enabled_features: Vec<String>,
+    /// the ngrok region in which the ingress for this operator is served. defaults to
+    /// "global"
+    pub region: String,
+    /// information about the deployment of this Kubernetes Operator
+    pub deployment: KubernetesOperatorDeployment,
+    /// information about the Bindings feature of this Kubernetes Operator, if enabled
+    pub binding: Option<KubernetesOperatorBinding>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct KubernetesOperatorDeployment {
+    /// the deployment name
+    pub name: String,
+    /// the namespace this Kubernetes Operator is deployed to
+    pub namespace: String,
+    /// the version of this Kubernetes Operator
+    pub version: String,
+    /// user-given name for the cluster the Kubernetes Operator is deployed to
+    pub cluster_name: String,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct KubernetesOperatorCert {
+    /// the public client certificate generated for this Kubernetes Operator from the
+    /// CSR supplied when enabling the Bindings feature
+    pub cert: String,
+    /// timestamp when the certificate becomes valid. RFC 3339 format
+    pub not_before: String,
+    /// timestamp when the certificate becomes invalid. RFC 3339 format
+    pub not_after: String,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct KubernetesOperatorBinding {
+    /// the list of cel expressions that filter the k8s bound endpoints for this
+    /// operator
+    pub endpoint_selectors: Vec<String>,
+    /// the binding certificate information
+    pub cert: KubernetesOperatorCert,
+    /// the public ingress endpoint for this Kubernetes Operator
+    pub ingress_endpoint: String,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct KubernetesOperatorList {
+    /// the list of Kubernetes Operators for this account
+    pub operators: Vec<KubernetesOperator>,
     pub uri: String,
     /// URI of the next page, or null if there is no next page
     pub next_page_uri: Option<String>,
