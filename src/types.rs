@@ -1855,13 +1855,11 @@ pub struct Endpoint {
     /// the local address the tunnel forwards to
     pub upstream_url: String,
     /// the protocol the agent uses to forward with
-    pub upstream_proto: String,
+    pub upstream_protocol: String,
     /// the url of the endpoint
     pub url: String,
     /// The ID of the owner (bot or user) that owns this endpoint
     pub principal: Option<Ref>,
-    /// TODO: deprecate me!
-    pub principal_id: Option<Ref>,
     /// The traffic policy attached to this endpoint
     pub traffic_policy: String,
     /// the bindings associated with this endpoint
@@ -1872,6 +1870,8 @@ pub struct Endpoint {
     pub uri: String,
     /// user supplied name for the endpoint
     pub name: String,
+    /// whether the endpoint allows pooling
+    pub pooling_enabled: bool,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -1888,8 +1888,8 @@ pub struct EndpointList {
 pub struct EndpointCreate {
     /// the url of the endpoint
     pub url: String,
-    /// whether the endpoint is `ephemeral` (served directly by an agent-initiated
-    /// tunnel) or `edge` (served by an edge) or `cloud (represents a cloud endpoint)`
+    /// Type of endpoint. Only 'cloud' is currently supported (represents a cloud
+    /// endpoint). Defaults to 'cloud' if not specified.
     pub r#type: String,
     /// The traffic policy attached to this endpoint
     pub traffic_policy: String,
@@ -1899,6 +1899,7 @@ pub struct EndpointCreate {
     pub metadata: Option<String>,
     /// the bindings associated with this endpoint
     pub bindings: Option<Vec<String>>,
+    pub pooling_enabled: bool,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -1915,6 +1916,7 @@ pub struct EndpointUpdate {
     pub metadata: Option<String>,
     /// the bindings associated with this endpoint
     pub bindings: Option<Vec<String>>,
+    pub pooling_enabled: bool,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]

@@ -1,4 +1,7 @@
 <!-- Code generated for API Clients. DO NOT EDIT. -->
+## 0.7.0
+* Renamed `upstream_proto` to `upstream_protocol` for `endpoint` resources
+* Added support for `pooling_enabled` on Endpoints
 
 ## 0.6.0
 * Added support for Cloud Endpoints (currently in private beta).
