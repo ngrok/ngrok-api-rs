@@ -2550,6 +2550,148 @@ pub mod reserved_domains {
     }
 }
 
+/// Secrets is an api service for securely storing and managing sensitive data such
+/// as secrets, credentials, and tokens.
+pub mod secrets {
+    use crate::types;
+    use crate::Error;
+    use futures::{Stream, TryStreamExt};
+
+    /// Secrets is an api service for securely storing and managing sensitive data such
+    /// as secrets, credentials, and tokens.
+    #[derive(Debug, Clone)]
+    pub struct Client {
+        c: crate::Client,
+    }
+    /// Provides streams of pages of [types::SecretList], or of [types::Secret] directly.
+    pub struct List {
+        c: std::sync::Arc<Client>,
+        req: types::Paging,
+    }
+
+    impl List {
+        /// Iterate over [types::SecretList].
+        ///
+        /// See [Tokio Streams](https://tokio.rs/tokio/tutorial/streams)
+        /// documentation for more info on usage.
+        pub async fn pages(self) -> impl Stream<Item = Result<types::SecretList, Error>> + Unpin {
+            struct State {
+                c: std::sync::Arc<Client>,
+                req: types::Paging,
+                init: bool,
+                cur_uri: Option<String>,
+            }
+
+            let s = State {
+                c: self.c,
+                req: self.req,
+                init: true,
+                cur_uri: None,
+            };
+
+            Box::pin(futures::stream::unfold(s, |s| async move {
+                let page_resp = match (s.init, &s.cur_uri) {
+                    (true, _) => s.c.list_page(&s.req).await,
+                    (false, None) => {
+                        return None;
+                    }
+                    (false, Some(uri)) => s.c.c.get_by_uri(uri).await,
+                };
+                match page_resp {
+                    Err(e) => Some((Err(e), s)),
+                    Ok(page) => {
+                        let next = page.next_page_uri.clone();
+                        Some((
+                            Ok(page),
+                            State {
+                                init: false,
+                                cur_uri: next,
+                                ..s
+                            },
+                        ))
+                    }
+                }
+            }))
+        }
+
+        /// Iterate over [types::Secret] items.
+        ///
+        /// See [Tokio Streams](https://tokio.rs/tokio/tutorial/streams)
+        /// documentation for more info on usage.
+        pub async fn secrets(self) -> impl Stream<Item = Result<types::Secret, Error>> + Unpin {
+            self.pages()
+                .await
+                .map_ok(|page| futures::stream::iter(page.secrets.into_iter().map(Ok)))
+                .try_flatten()
+        }
+    }
+
+    impl Client {
+        pub fn new(c: crate::Client) -> Self {
+            Self { c }
+        }
+
+        /// Create a new Secret
+        pub async fn create(&self, req: &types::SecretCreate) -> Result<types::Secret, Error> {
+            self.c
+                .make_request("/vault_secrets", reqwest::Method::POST, Some(req))
+                .await
+        }
+
+        /// Update an existing Secret by ID
+        pub async fn update(&self, req: &types::SecretUpdate) -> Result<types::Secret, Error> {
+            self.c
+                .make_request(
+                    &format!("/vault_secrets/{id}", id = req.id),
+                    reqwest::Method::PATCH,
+                    Some(req),
+                )
+                .await
+        }
+
+        /// Delete a Secret
+        pub async fn delete(&self, id: &str) -> Result<(), Error> {
+            self.c
+                .make_request(
+                    &format!("/vault_secrets/{id}", id = id),
+                    reqwest::Method::DELETE,
+                    None::<Option<()>>,
+                )
+                .await
+        }
+
+        /// Get a Secret by ID
+        pub async fn get(&self, id: &str) -> Result<types::Secret, Error> {
+            self.c
+                .make_request(
+                    &format!("/vault_secrets/{id}", id = id),
+                    reqwest::Method::GET,
+                    None::<Option<()>>,
+                )
+                .await
+        }
+
+        /// Get a single page without pagination. Prefer using list
+        /// which will do pagination for you.
+        pub(crate) async fn list_page(
+            &self,
+            req: &types::Paging,
+        ) -> Result<types::SecretList, Error> {
+            self.c
+                .make_request("/vault_secrets", reqwest::Method::GET, Some(req))
+                .await
+        }
+
+        /// List all Secrets owned by account
+        pub fn list(&self, req: types::Paging) -> List {
+            List {
+                c: std::sync::Arc::new(self.clone()),
+                req,
+            }
+        }
+    }
+}
+
 /// An SSH Certificate Authority is a pair of an SSH Certificate and its private
 ///  key that can be used to sign other SSH host and user certificates.
 pub mod ssh_certificate_authorities {
@@ -3447,6 +3589,148 @@ pub mod tunnels {
         }
     }
 }
+
+/// Vaults is an api service for securely storing and managing sensitive data such
+/// as secrets, credentials, and tokens.
+pub mod vaults {
+    use crate::types;
+    use crate::Error;
+    use futures::{Stream, TryStreamExt};
+
+    /// Vaults is an api service for securely storing and managing sensitive data such
+    /// as secrets, credentials, and tokens.
+    #[derive(Debug, Clone)]
+    pub struct Client {
+        c: crate::Client,
+    }
+    /// Provides streams of pages of [types::VaultList], or of [types::Vault] directly.
+    pub struct List {
+        c: std::sync::Arc<Client>,
+        req: types::Paging,
+    }
+
+    impl List {
+        /// Iterate over [types::VaultList].
+        ///
+        /// See [Tokio Streams](https://tokio.rs/tokio/tutorial/streams)
+        /// documentation for more info on usage.
+        pub async fn pages(self) -> impl Stream<Item = Result<types::VaultList, Error>> + Unpin {
+            struct State {
+                c: std::sync::Arc<Client>,
+                req: types::Paging,
+                init: bool,
+                cur_uri: Option<String>,
+            }
+
+            let s = State {
+                c: self.c,
+                req: self.req,
+                init: true,
+                cur_uri: None,
+            };
+
+            Box::pin(futures::stream::unfold(s, |s| async move {
+                let page_resp = match (s.init, &s.cur_uri) {
+                    (true, _) => s.c.list_page(&s.req).await,
+                    (false, None) => {
+                        return None;
+                    }
+                    (false, Some(uri)) => s.c.c.get_by_uri(uri).await,
+                };
+                match page_resp {
+                    Err(e) => Some((Err(e), s)),
+                    Ok(page) => {
+                        let next = page.next_page_uri.clone();
+                        Some((
+                            Ok(page),
+                            State {
+                                init: false,
+                                cur_uri: next,
+                                ..s
+                            },
+                        ))
+                    }
+                }
+            }))
+        }
+
+        /// Iterate over [types::Vault] items.
+        ///
+        /// See [Tokio Streams](https://tokio.rs/tokio/tutorial/streams)
+        /// documentation for more info on usage.
+        pub async fn vaults(self) -> impl Stream<Item = Result<types::Vault, Error>> + Unpin {
+            self.pages()
+                .await
+                .map_ok(|page| futures::stream::iter(page.vaults.into_iter().map(Ok)))
+                .try_flatten()
+        }
+    }
+
+    impl Client {
+        pub fn new(c: crate::Client) -> Self {
+            Self { c }
+        }
+
+        /// Create a new Vault
+        pub async fn create(&self, req: &types::VaultCreate) -> Result<types::Vault, Error> {
+            self.c
+                .make_request("/vaults", reqwest::Method::POST, Some(req))
+                .await
+        }
+
+        /// Update an existing Vault by ID
+        pub async fn update(&self, req: &types::VaultUpdate) -> Result<types::Vault, Error> {
+            self.c
+                .make_request(
+                    &format!("/vaults/{id}", id = req.id),
+                    reqwest::Method::PATCH,
+                    Some(req),
+                )
+                .await
+        }
+
+        /// Delete a Vault
+        pub async fn delete(&self, id: &str) -> Result<(), Error> {
+            self.c
+                .make_request(
+                    &format!("/vaults/{id}", id = id),
+                    reqwest::Method::DELETE,
+                    None::<Option<()>>,
+                )
+                .await
+        }
+
+        /// Get a Vault by ID
+        pub async fn get(&self, id: &str) -> Result<types::Vault, Error> {
+            self.c
+                .make_request(
+                    &format!("/vaults/{id}", id = id),
+                    reqwest::Method::GET,
+                    None::<Option<()>>,
+                )
+                .await
+        }
+
+        /// Get a single page without pagination. Prefer using list
+        /// which will do pagination for you.
+        pub(crate) async fn list_page(
+            &self,
+            req: &types::Paging,
+        ) -> Result<types::VaultList, Error> {
+            self.c
+                .make_request("/vaults", reqwest::Method::GET, Some(req))
+                .await
+        }
+
+        /// List all Vaults owned by account
+        pub fn list(&self, req: types::Paging) -> List {
+            List {
+                c: std::sync::Arc::new(self.clone()),
+                req,
+            }
+        }
+    }
+}
 impl Client {
     pub fn abuse_reports(&self) -> abuse_reports::Client {
         abuse_reports::Client::new(self.clone())
@@ -3502,6 +3786,9 @@ impl Client {
     pub fn reserved_domains(&self) -> reserved_domains::Client {
         reserved_domains::Client::new(self.clone())
     }
+    pub fn secrets(&self) -> secrets::Client {
+        secrets::Client::new(self.clone())
+    }
     pub fn ssh_certificate_authorities(&self) -> ssh_certificate_authorities::Client {
         ssh_certificate_authorities::Client::new(self.clone())
     }
@@ -3519,6 +3806,9 @@ impl Client {
     }
     pub fn tunnels(&self) -> tunnels::Client {
         tunnels::Client::new(self.clone())
+    }
+    pub fn vaults(&self) -> vaults::Client {
+        vaults::Client::new(self.clone())
     }
 }
 
