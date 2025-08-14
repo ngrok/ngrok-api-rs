@@ -1855,23 +1855,23 @@ pub struct Endpoint {
     /// the local address the tunnel forwards to
     pub upstream_url: String,
     /// the protocol the agent uses to forward with
-    pub upstream_proto: String,
+    pub upstream_protocol: String,
     /// the url of the endpoint
     pub url: String,
     /// The ID of the owner (bot or user) that owns this endpoint
     pub principal: Option<Ref>,
-    /// TODO: deprecate me!
-    pub principal_id: Option<Ref>,
     /// The traffic policy attached to this endpoint
     pub traffic_policy: String,
     /// the bindings associated with this endpoint
     pub bindings: Option<Vec<String>>,
     /// The tunnel session of the agent for this endpoint
     pub tunnel_session: Option<Ref>,
-    /// URI of the clep API resource
+    /// URI of the Cloud Endpoint API resource
     pub uri: String,
     /// user supplied name for the endpoint
     pub name: String,
+    /// whether the endpoint allows pooling
+    pub pooling_enabled: bool,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -1888,8 +1888,8 @@ pub struct EndpointList {
 pub struct EndpointCreate {
     /// the url of the endpoint
     pub url: String,
-    /// whether the endpoint is `ephemeral` (served directly by an agent-initiated
-    /// tunnel) or `edge` (served by an edge) or `cloud (represents a cloud endpoint)`
+    /// Type of endpoint. Only 'cloud' is currently supported (represents a cloud
+    /// endpoint). Defaults to 'cloud' if not specified.
     pub r#type: String,
     /// The traffic policy attached to this endpoint
     pub traffic_policy: String,
@@ -1899,6 +1899,15 @@ pub struct EndpointCreate {
     pub metadata: Option<String>,
     /// the bindings associated with this endpoint
     pub bindings: Option<Vec<String>>,
+    pub pooling_enabled: bool,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct EndpointListArgs {
+    pub before_id: Option<String>,
+    pub limit: Option<String>,
+    pub ids: Vec<String>,
+    pub urls: Vec<String>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -1915,6 +1924,7 @@ pub struct EndpointUpdate {
     pub metadata: Option<String>,
     /// the bindings associated with this endpoint
     pub bindings: Option<Vec<String>>,
+    pub pooling_enabled: bool,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -2549,6 +2559,67 @@ pub struct ReservedDomainCertJob {
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct SecretCreate {
+    /// Name of secret
+    pub name: String,
+    /// Value of secret
+    pub value: String,
+    /// Arbitrary user-defined metadata for this Secret
+    pub metadata: String,
+    /// description of Secret
+    pub description: String,
+    /// unique identifier of the referenced vault
+    pub vault_id: String,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct SecretUpdate {
+    /// identifier for Secret
+    pub id: String,
+    /// Name of secret
+    pub name: Option<String>,
+    /// Value of secret
+    pub value: Option<String>,
+    /// Arbitrary user-defined metadata for this Secret
+    pub metadata: Option<String>,
+    /// description of Secret
+    pub description: Option<String>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct Secret {
+    /// identifier for Secret
+    pub id: String,
+    /// URI of this Secret API resource
+    pub uri: String,
+    /// Timestamp when the Secret was created (RFC 3339 format)
+    pub created_at: String,
+    /// Timestamp when the Secret was last updated (RFC 3339 format)
+    pub updated_at: String,
+    /// Name of secret
+    pub name: String,
+    /// description of Secret
+    pub description: String,
+    /// Arbitrary user-defined metadata for this Secret
+    pub metadata: String,
+    /// Reference to who created this Secret
+    pub created_by: Ref,
+    /// Reference to who created this Secret
+    pub last_updated_by: Ref,
+    /// Reference to the vault the secret is stored in
+    pub vault: Ref,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct SecretList {
+    /// The list of Secrets for this account
+    pub secrets: Vec<Secret>,
+    pub uri: String,
+    /// URI of the next page of results, or null if there is no next page
+    pub next_page_uri: Option<String>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct SSHCertificateAuthorityCreate {
     /// human-readable description of this SSH Certificate Authority. optional, max 255
     /// bytes.
@@ -3038,5 +3109,58 @@ pub struct TunnelList {
     /// URI of the tunnels list API resource
     pub uri: String,
     /// URI of the next page, or null if there is no next page
+    pub next_page_uri: Option<String>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct VaultCreate {
+    /// Name of vault
+    pub name: String,
+    /// Arbitrary user-defined metadata for this Vault
+    pub metadata: String,
+    /// description of Vault
+    pub description: String,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct VaultUpdate {
+    /// identifier for Vault
+    pub id: String,
+    /// Name of vault
+    pub name: Option<String>,
+    /// Arbitrary user-defined metadata for this Vault
+    pub metadata: Option<String>,
+    /// description of Vault
+    pub description: Option<String>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct Vault {
+    /// identifier for Vault
+    pub id: String,
+    /// URI of this Vault API resource
+    pub uri: String,
+    /// Timestamp when the Vault was created (RFC 3339 format)
+    pub created_at: String,
+    /// Timestamp when the Vault was last updated (RFC 3339 format)
+    pub updated_at: String,
+    /// Name of vault
+    pub name: String,
+    /// description of Vault
+    pub description: String,
+    /// Arbitrary user-defined metadata for this Vault
+    pub metadata: String,
+    /// Reference to who created this Vault
+    pub created_by: String,
+    /// Reference to who created this Vault
+    pub last_updated_by: String,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct VaultList {
+    /// The list of Vaults for this account
+    pub vaults: Vec<Vault>,
+    pub uri: String,
+    /// URI of the next page of results, or null if there is no next page
     pub next_page_uri: Option<String>,
 }
