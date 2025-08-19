@@ -3603,6 +3603,69 @@ pub mod vaults {
     pub struct Client {
         c: crate::Client,
     }
+    /// Provides streams of pages of [types::SecretList], or of [types::Secret] directly.
+    pub struct GetSecretsByVault {
+        c: std::sync::Arc<Client>,
+        req: types::ItemPaging,
+    }
+
+    impl GetSecretsByVault {
+        /// Iterate over [types::SecretList].
+        ///
+        /// See [Tokio Streams](https://tokio.rs/tokio/tutorial/streams)
+        /// documentation for more info on usage.
+        pub async fn pages(self) -> impl Stream<Item = Result<types::SecretList, Error>> + Unpin {
+            struct State {
+                c: std::sync::Arc<Client>,
+                req: types::ItemPaging,
+                init: bool,
+                cur_uri: Option<String>,
+            }
+
+            let s = State {
+                c: self.c,
+                req: self.req,
+                init: true,
+                cur_uri: None,
+            };
+
+            Box::pin(futures::stream::unfold(s, |s| async move {
+                let page_resp = match (s.init, &s.cur_uri) {
+                    (true, _) => s.c.get_secrets_by_vault_page(&s.req).await,
+                    (false, None) => {
+                        return None;
+                    }
+                    (false, Some(uri)) => s.c.c.get_by_uri(uri).await,
+                };
+                match page_resp {
+                    Err(e) => Some((Err(e), s)),
+                    Ok(page) => {
+                        let next = page.next_page_uri.clone();
+                        Some((
+                            Ok(page),
+                            State {
+                                init: false,
+                                cur_uri: next,
+                                ..s
+                            },
+                        ))
+                    }
+                }
+            }))
+        }
+
+        /// Iterate over [types::Secret] items.
+        ///
+        /// See [Tokio Streams](https://tokio.rs/tokio/tutorial/streams)
+        /// documentation for more info on usage.
+        pub async fn secrets(self) -> impl Stream<Item = Result<types::Secret, Error>> + Unpin {
+            self.pages()
+                .await
+                .map_ok(|page| futures::stream::iter(page.secrets.into_iter().map(Ok)))
+                .try_flatten()
+        }
+    }
+
     /// Provides streams of pages of [types::VaultList], or of [types::Vault] directly.
     pub struct List {
         c: std::sync::Arc<Client>,
@@ -3709,6 +3772,29 @@ pub mod vaults {
                     None::<Option<()>>,
                 )
                 .await
+        }
+
+        /// Get a single page without pagination. Prefer using get_secrets_by_vault
+        /// which will do pagination for you.
+        pub(crate) async fn get_secrets_by_vault_page(
+            &self,
+            req: &types::ItemPaging,
+        ) -> Result<types::SecretList, Error> {
+            self.c
+                .make_request(
+                    &format!("/vaults/{id}/secrets", id = req.id),
+                    reqwest::Method::GET,
+                    Some(req),
+                )
+                .await
+        }
+
+        /// Get Secrets by Vault ID
+        pub fn get_secrets_by_vault(&self, req: types::ItemPaging) -> GetSecretsByVault {
+            GetSecretsByVault {
+                c: std::sync::Arc::new(self.clone()),
+                req,
+            }
         }
 
         /// Get a single page without pagination. Prefer using list
