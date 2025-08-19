@@ -16,6 +16,14 @@ pub struct Paging {
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct ItemPaging {
+    /// a resource identifier
+    pub id: String,
+    pub before_id: Option<String>,
+    pub limit: Option<String>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct Error {
     pub error_code: String,
     pub status_code: i32,
@@ -1906,8 +1914,8 @@ pub struct EndpointCreate {
 pub struct EndpointListArgs {
     pub before_id: Option<String>,
     pub limit: Option<String>,
-    pub ids: Vec<String>,
-    pub urls: Vec<String>,
+    pub id: Vec<String>,
+    pub url: Vec<String>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
