@@ -16,6 +16,13 @@ pub struct Paging {
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct FilteredPaging {
+    pub before_id: Option<String>,
+    pub limit: Option<String>,
+    pub filter: Option<String>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct ItemPaging {
     /// a resource identifier
     pub id: String,
@@ -1836,7 +1843,7 @@ pub struct Endpoint {
     pub created_at: String,
     /// timestamp when the endpoint was updated in RFC 3339 format
     pub updated_at: String,
-    /// URL of the hostport served by this endpoint
+    /// deprecated [replaced by URL]: URL of the hostport served by this endpoint
     pub public_url: String,
     /// protocol served by this endpoint. one of `http`, `https`, `tcp`, or `tls`
     pub proto: String,
@@ -1907,7 +1914,7 @@ pub struct EndpointCreate {
     pub metadata: Option<String>,
     /// the bindings associated with this endpoint
     pub bindings: Option<Vec<String>>,
-    pub pooling_enabled: bool,
+    pub pooling_enabled: Option<bool>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -1916,6 +1923,7 @@ pub struct EndpointListArgs {
     pub limit: Option<String>,
     pub id: Vec<String>,
     pub url: Vec<String>,
+    pub filter: Option<String>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -1932,7 +1940,7 @@ pub struct EndpointUpdate {
     pub metadata: Option<String>,
     /// the bindings associated with this endpoint
     pub bindings: Option<Vec<String>>,
-    pub pooling_enabled: bool,
+    pub pooling_enabled: Option<bool>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -2578,6 +2586,8 @@ pub struct SecretCreate {
     pub description: String,
     /// unique identifier of the referenced vault
     pub vault_id: String,
+    /// name of the referenced vault
+    pub vault_name: String,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -2616,6 +2626,8 @@ pub struct Secret {
     pub last_updated_by: Ref,
     /// Reference to the vault the secret is stored in
     pub vault: Ref,
+    /// Name of the vault the secret is stored in
+    pub vault_name: String,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -2624,6 +2636,47 @@ pub struct SecretList {
     pub secrets: Vec<Secret>,
     pub uri: String,
     /// URI of the next page of results, or null if there is no next page
+    pub next_page_uri: Option<String>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct ServiceUser {
+    /// unique API key resource identifier
+    pub id: String,
+    /// URI to the API resource of this service user
+    pub uri: String,
+    /// human-readable name used to identify the service
+    pub name: String,
+    /// whether or not the service is active
+    pub active: bool,
+    /// timestamp when the api key was created, RFC 3339 format
+    pub created_at: String,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct ServiceUserCreate {
+    /// human-readable name used to identify the service
+    pub name: String,
+    /// whether or not the service is active
+    pub active: Option<bool>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct ServiceUserUpdate {
+    pub id: String,
+    /// human-readable name used to identify the service
+    pub name: Option<String>,
+    /// whether or not the service is active
+    pub active: Option<bool>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct ServiceUserList {
+    /// the list of all service users on this account
+    pub service_users: Vec<ServiceUser>,
+    /// URI of the service users list API resource
+    pub uri: String,
+    /// URI of the next page, or null if there is no next page
     pub next_page_uri: Option<String>,
 }
 
