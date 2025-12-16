@@ -57,7 +57,7 @@ pub mod agent_ingresses {
     /// Provides streams of pages of [types::AgentIngressList], or of [types::AgentIngress] directly.
     pub struct List {
         c: std::sync::Arc<Client>,
-        req: types::Paging,
+        req: types::FilteredPaging,
     }
 
     impl List {
@@ -70,7 +70,7 @@ pub mod agent_ingresses {
         ) -> impl Stream<Item = Result<types::AgentIngressList, Error>> + Unpin {
             struct State {
                 c: std::sync::Arc<Client>,
-                req: types::Paging,
+                req: types::FilteredPaging,
                 init: bool,
                 cur_uri: Option<String>,
             }
@@ -163,7 +163,7 @@ pub mod agent_ingresses {
         /// which will do pagination for you.
         pub(crate) async fn list_page(
             &self,
-            req: &types::Paging,
+            req: &types::FilteredPaging,
         ) -> Result<types::AgentIngressList, Error> {
             self.c
                 .make_request("/agent_ingresses", reqwest::Method::GET, Some(req))
@@ -171,7 +171,7 @@ pub mod agent_ingresses {
         }
 
         /// List all Agent Ingresses owned by this account
-        pub fn list(&self, req: types::Paging) -> List {
+        pub fn list(&self, req: types::FilteredPaging) -> List {
             List {
                 c: std::sync::Arc::new(self.clone()),
                 req,
@@ -216,7 +216,7 @@ pub mod api_keys {
     /// Provides streams of pages of [types::APIKeyList], or of [types::APIKey] directly.
     pub struct List {
         c: std::sync::Arc<Client>,
-        req: types::Paging,
+        req: types::FilteredPaging,
     }
 
     impl List {
@@ -227,7 +227,7 @@ pub mod api_keys {
         pub async fn pages(self) -> impl Stream<Item = Result<types::APIKeyList, Error>> + Unpin {
             struct State {
                 c: std::sync::Arc<Client>,
-                req: types::Paging,
+                req: types::FilteredPaging,
                 init: bool,
                 cur_uri: Option<String>,
             }
@@ -315,7 +315,7 @@ pub mod api_keys {
         /// which will do pagination for you.
         pub(crate) async fn list_page(
             &self,
-            req: &types::Paging,
+            req: &types::FilteredPaging,
         ) -> Result<types::APIKeyList, Error> {
             self.c
                 .make_request("/api_keys", reqwest::Method::GET, Some(req))
@@ -323,7 +323,7 @@ pub mod api_keys {
         }
 
         /// List all API keys owned by this account
-        pub fn list(&self, req: types::Paging) -> List {
+        pub fn list(&self, req: types::FilteredPaging) -> List {
             List {
                 c: std::sync::Arc::new(self.clone()),
                 req,
@@ -609,7 +609,7 @@ pub mod tunnel_sessions {
     /// Provides streams of pages of [types::TunnelSessionList], or of [types::TunnelSession] directly.
     pub struct List {
         c: std::sync::Arc<Client>,
-        req: types::Paging,
+        req: types::FilteredPaging,
     }
 
     impl List {
@@ -622,7 +622,7 @@ pub mod tunnel_sessions {
         ) -> impl Stream<Item = Result<types::TunnelSessionList, Error>> + Unpin {
             struct State {
                 c: std::sync::Arc<Client>,
-                req: types::Paging,
+                req: types::FilteredPaging,
                 init: bool,
                 cur_uri: Option<String>,
             }
@@ -682,7 +682,7 @@ pub mod tunnel_sessions {
         /// which will do pagination for you.
         pub(crate) async fn list_page(
             &self,
-            req: &types::Paging,
+            req: &types::FilteredPaging,
         ) -> Result<types::TunnelSessionList, Error> {
             self.c
                 .make_request("/tunnel_sessions", reqwest::Method::GET, Some(req))
@@ -690,7 +690,7 @@ pub mod tunnel_sessions {
         }
 
         /// List all online tunnel sessions running on this account.
-        pub fn list(&self, req: types::Paging) -> List {
+        pub fn list(&self, req: types::FilteredPaging) -> List {
             List {
                 c: std::sync::Arc::new(self.clone()),
                 req,
@@ -918,7 +918,7 @@ pub mod certificate_authorities {
     /// Provides streams of pages of [types::CertificateAuthorityList], or of [types::CertificateAuthority] directly.
     pub struct List {
         c: std::sync::Arc<Client>,
-        req: types::Paging,
+        req: types::FilteredPaging,
     }
 
     impl List {
@@ -931,7 +931,7 @@ pub mod certificate_authorities {
         ) -> impl Stream<Item = Result<types::CertificateAuthorityList, Error>> + Unpin {
             struct State {
                 c: std::sync::Arc<Client>,
-                req: types::Paging,
+                req: types::FilteredPaging,
                 init: bool,
                 cur_uri: Option<String>,
             }
@@ -1010,7 +1010,7 @@ pub mod certificate_authorities {
                 .await
         }
 
-        /// Get detailed information about a certficate authority
+        /// Get detailed information about a certificate authority
         pub async fn get(&self, id: &str) -> Result<types::CertificateAuthority, Error> {
             self.c
                 .make_request(
@@ -1025,7 +1025,7 @@ pub mod certificate_authorities {
         /// which will do pagination for you.
         pub(crate) async fn list_page(
             &self,
-            req: &types::Paging,
+            req: &types::FilteredPaging,
         ) -> Result<types::CertificateAuthorityList, Error> {
             self.c
                 .make_request("/certificate_authorities", reqwest::Method::GET, Some(req))
@@ -1033,7 +1033,7 @@ pub mod certificate_authorities {
         }
 
         /// List all Certificate Authority on this account
-        pub fn list(&self, req: types::Paging) -> List {
+        pub fn list(&self, req: types::FilteredPaging) -> List {
             List {
                 c: std::sync::Arc::new(self.clone()),
                 req,
@@ -1076,7 +1076,7 @@ pub mod credentials {
     /// Provides streams of pages of [types::CredentialList], or of [types::Credential] directly.
     pub struct List {
         c: std::sync::Arc<Client>,
-        req: types::Paging,
+        req: types::FilteredPaging,
     }
 
     impl List {
@@ -1089,7 +1089,7 @@ pub mod credentials {
         ) -> impl Stream<Item = Result<types::CredentialList, Error>> + Unpin {
             struct State {
                 c: std::sync::Arc<Client>,
-                req: types::Paging,
+                req: types::FilteredPaging,
                 init: bool,
                 cur_uri: Option<String>,
             }
@@ -1184,7 +1184,7 @@ pub mod credentials {
         /// which will do pagination for you.
         pub(crate) async fn list_page(
             &self,
-            req: &types::Paging,
+            req: &types::FilteredPaging,
         ) -> Result<types::CredentialList, Error> {
             self.c
                 .make_request("/credentials", reqwest::Method::GET, Some(req))
@@ -1192,7 +1192,7 @@ pub mod credentials {
         }
 
         /// List all tunnel authtoken credentials on this account
-        pub fn list(&self, req: types::Paging) -> List {
+        pub fn list(&self, req: types::FilteredPaging) -> List {
             List {
                 c: std::sync::Arc::new(self.clone()),
                 req,
@@ -1371,7 +1371,7 @@ pub mod event_destinations {
     /// Provides streams of pages of [types::EventDestinationList], or of [types::EventDestination] directly.
     pub struct List {
         c: std::sync::Arc<Client>,
-        req: types::Paging,
+        req: types::FilteredPaging,
     }
 
     impl List {
@@ -1384,7 +1384,7 @@ pub mod event_destinations {
         ) -> impl Stream<Item = Result<types::EventDestinationList, Error>> + Unpin {
             struct State {
                 c: std::sync::Arc<Client>,
-                req: types::Paging,
+                req: types::FilteredPaging,
                 init: bool,
                 cur_uri: Option<String>,
             }
@@ -1478,7 +1478,7 @@ pub mod event_destinations {
         /// which will do pagination for you.
         pub(crate) async fn list_page(
             &self,
-            req: &types::Paging,
+            req: &types::FilteredPaging,
         ) -> Result<types::EventDestinationList, Error> {
             self.c
                 .make_request("/event_destinations", reqwest::Method::GET, Some(req))
@@ -1486,7 +1486,7 @@ pub mod event_destinations {
         }
 
         /// List all Event Destinations on this account.
-        pub fn list(&self, req: types::Paging) -> List {
+        pub fn list(&self, req: types::FilteredPaging) -> List {
             List {
                 c: std::sync::Arc::new(self.clone()),
                 req,
@@ -1521,7 +1521,7 @@ pub mod event_subscriptions {
     /// Provides streams of pages of [types::EventSubscriptionList], or of [types::EventSubscription] directly.
     pub struct List {
         c: std::sync::Arc<Client>,
-        req: types::Paging,
+        req: types::FilteredPaging,
     }
 
     impl List {
@@ -1534,7 +1534,7 @@ pub mod event_subscriptions {
         ) -> impl Stream<Item = Result<types::EventSubscriptionList, Error>> + Unpin {
             struct State {
                 c: std::sync::Arc<Client>,
-                req: types::Paging,
+                req: types::FilteredPaging,
                 init: bool,
                 cur_uri: Option<String>,
             }
@@ -1626,7 +1626,7 @@ pub mod event_subscriptions {
         /// which will do pagination for you.
         pub(crate) async fn list_page(
             &self,
-            req: &types::Paging,
+            req: &types::FilteredPaging,
         ) -> Result<types::EventSubscriptionList, Error> {
             self.c
                 .make_request("/event_subscriptions", reqwest::Method::GET, Some(req))
@@ -1634,7 +1634,7 @@ pub mod event_subscriptions {
         }
 
         /// List this Account's Event Subscriptions.
-        pub fn list(&self, req: types::Paging) -> List {
+        pub fn list(&self, req: types::FilteredPaging) -> List {
             List {
                 c: std::sync::Arc::new(self.clone()),
                 req,
@@ -1772,7 +1772,7 @@ pub mod ip_policies {
     /// Provides streams of pages of [types::IPPolicyList], or of [types::IPPolicy] directly.
     pub struct List {
         c: std::sync::Arc<Client>,
-        req: types::Paging,
+        req: types::FilteredPaging,
     }
 
     impl List {
@@ -1783,7 +1783,7 @@ pub mod ip_policies {
         pub async fn pages(self) -> impl Stream<Item = Result<types::IPPolicyList, Error>> + Unpin {
             struct State {
                 c: std::sync::Arc<Client>,
-                req: types::Paging,
+                req: types::FilteredPaging,
                 init: bool,
                 cur_uri: Option<String>,
             }
@@ -1875,7 +1875,7 @@ pub mod ip_policies {
         /// which will do pagination for you.
         pub(crate) async fn list_page(
             &self,
-            req: &types::Paging,
+            req: &types::FilteredPaging,
         ) -> Result<types::IPPolicyList, Error> {
             self.c
                 .make_request("/ip_policies", reqwest::Method::GET, Some(req))
@@ -1883,7 +1883,7 @@ pub mod ip_policies {
         }
 
         /// List all IP policies on this account
-        pub fn list(&self, req: types::Paging) -> List {
+        pub fn list(&self, req: types::FilteredPaging) -> List {
             List {
                 c: std::sync::Arc::new(self.clone()),
                 req,
@@ -1919,7 +1919,7 @@ pub mod ip_policy_rules {
     /// Provides streams of pages of [types::IPPolicyRuleList], or of [types::IPPolicyRule] directly.
     pub struct List {
         c: std::sync::Arc<Client>,
-        req: types::Paging,
+        req: types::FilteredPaging,
     }
 
     impl List {
@@ -1932,7 +1932,7 @@ pub mod ip_policy_rules {
         ) -> impl Stream<Item = Result<types::IPPolicyRuleList, Error>> + Unpin {
             struct State {
                 c: std::sync::Arc<Client>,
-                req: types::Paging,
+                req: types::FilteredPaging,
                 init: bool,
                 cur_uri: Option<String>,
             }
@@ -2024,7 +2024,7 @@ pub mod ip_policy_rules {
         /// which will do pagination for you.
         pub(crate) async fn list_page(
             &self,
-            req: &types::Paging,
+            req: &types::FilteredPaging,
         ) -> Result<types::IPPolicyRuleList, Error> {
             self.c
                 .make_request("/ip_policy_rules", reqwest::Method::GET, Some(req))
@@ -2032,7 +2032,7 @@ pub mod ip_policy_rules {
         }
 
         /// List all IP policy rules on this account
-        pub fn list(&self, req: types::Paging) -> List {
+        pub fn list(&self, req: types::FilteredPaging) -> List {
             List {
                 c: std::sync::Arc::new(self.clone()),
                 req,
@@ -2079,7 +2079,7 @@ pub mod ip_restrictions {
     /// Provides streams of pages of [types::IPRestrictionList], or of [types::IPRestriction] directly.
     pub struct List {
         c: std::sync::Arc<Client>,
-        req: types::Paging,
+        req: types::FilteredPaging,
     }
 
     impl List {
@@ -2092,7 +2092,7 @@ pub mod ip_restrictions {
         ) -> impl Stream<Item = Result<types::IPRestrictionList, Error>> + Unpin {
             struct State {
                 c: std::sync::Arc<Client>,
-                req: types::Paging,
+                req: types::FilteredPaging,
                 init: bool,
                 cur_uri: Option<String>,
             }
@@ -2184,7 +2184,7 @@ pub mod ip_restrictions {
         /// which will do pagination for you.
         pub(crate) async fn list_page(
             &self,
-            req: &types::Paging,
+            req: &types::FilteredPaging,
         ) -> Result<types::IPRestrictionList, Error> {
             self.c
                 .make_request("/ip_restrictions", reqwest::Method::GET, Some(req))
@@ -2192,7 +2192,7 @@ pub mod ip_restrictions {
         }
 
         /// List all IP restrictions on this account
-        pub fn list(&self, req: types::Paging) -> List {
+        pub fn list(&self, req: types::FilteredPaging) -> List {
             List {
                 c: std::sync::Arc::new(self.clone()),
                 req,
@@ -2233,7 +2233,7 @@ pub mod reserved_addrs {
     /// Provides streams of pages of [types::ReservedAddrList], or of [types::ReservedAddr] directly.
     pub struct List {
         c: std::sync::Arc<Client>,
-        req: types::Paging,
+        req: types::FilteredPaging,
     }
 
     impl List {
@@ -2246,7 +2246,7 @@ pub mod reserved_addrs {
         ) -> impl Stream<Item = Result<types::ReservedAddrList, Error>> + Unpin {
             struct State {
                 c: std::sync::Arc<Client>,
-                req: types::Paging,
+                req: types::FilteredPaging,
                 init: bool,
                 cur_uri: Option<String>,
             }
@@ -2338,7 +2338,7 @@ pub mod reserved_addrs {
         /// which will do pagination for you.
         pub(crate) async fn list_page(
             &self,
-            req: &types::Paging,
+            req: &types::FilteredPaging,
         ) -> Result<types::ReservedAddrList, Error> {
             self.c
                 .make_request("/reserved_addrs", reqwest::Method::GET, Some(req))
@@ -2346,7 +2346,7 @@ pub mod reserved_addrs {
         }
 
         /// List all reserved addresses on this account.
-        pub fn list(&self, req: types::Paging) -> List {
+        pub fn list(&self, req: types::FilteredPaging) -> List {
             List {
                 c: std::sync::Arc::new(self.clone()),
                 req,
@@ -2389,7 +2389,7 @@ pub mod reserved_domains {
     /// Provides streams of pages of [types::ReservedDomainList], or of [types::ReservedDomain] directly.
     pub struct List {
         c: std::sync::Arc<Client>,
-        req: types::Paging,
+        req: types::FilteredPaging,
     }
 
     impl List {
@@ -2402,7 +2402,7 @@ pub mod reserved_domains {
         ) -> impl Stream<Item = Result<types::ReservedDomainList, Error>> + Unpin {
             struct State {
                 c: std::sync::Arc<Client>,
-                req: types::Paging,
+                req: types::FilteredPaging,
                 init: bool,
                 cur_uri: Option<String>,
             }
@@ -2494,7 +2494,7 @@ pub mod reserved_domains {
         /// which will do pagination for you.
         pub(crate) async fn list_page(
             &self,
-            req: &types::Paging,
+            req: &types::FilteredPaging,
         ) -> Result<types::ReservedDomainList, Error> {
             self.c
                 .make_request("/reserved_domains", reqwest::Method::GET, Some(req))
@@ -2502,7 +2502,7 @@ pub mod reserved_domains {
         }
 
         /// List all reserved domains on this account.
-        pub fn list(&self, req: types::Paging) -> List {
+        pub fn list(&self, req: types::FilteredPaging) -> List {
             List {
                 c: std::sync::Arc::new(self.clone()),
                 req,
@@ -2566,7 +2566,7 @@ pub mod secrets {
     /// Provides streams of pages of [types::SecretList], or of [types::Secret] directly.
     pub struct List {
         c: std::sync::Arc<Client>,
-        req: types::Paging,
+        req: types::FilteredPaging,
     }
 
     impl List {
@@ -2577,7 +2577,7 @@ pub mod secrets {
         pub async fn pages(self) -> impl Stream<Item = Result<types::SecretList, Error>> + Unpin {
             struct State {
                 c: std::sync::Arc<Client>,
-                req: types::Paging,
+                req: types::FilteredPaging,
                 init: bool,
                 cur_uri: Option<String>,
             }
@@ -2675,7 +2675,7 @@ pub mod secrets {
         /// which will do pagination for you.
         pub(crate) async fn list_page(
             &self,
-            req: &types::Paging,
+            req: &types::FilteredPaging,
         ) -> Result<types::SecretList, Error> {
             self.c
                 .make_request("/vault_secrets", reqwest::Method::GET, Some(req))
@@ -2683,11 +2683,159 @@ pub mod secrets {
         }
 
         /// List all Secrets owned by account
-        pub fn list(&self, req: types::Paging) -> List {
+        pub fn list(&self, req: types::FilteredPaging) -> List {
             List {
                 c: std::sync::Arc::new(self.clone()),
                 req,
             }
+        }
+    }
+}
+
+pub mod service_users {
+    use crate::types;
+    use crate::Error;
+    use futures::{Stream, TryStreamExt};
+
+    #[derive(Debug, Clone)]
+    pub struct Client {
+        c: crate::Client,
+    }
+    /// Provides streams of pages of [types::ServiceUserList], or of [types::ServiceUser] directly.
+    pub struct List {
+        c: std::sync::Arc<Client>,
+        req: types::FilteredPaging,
+    }
+
+    impl List {
+        /// Iterate over [types::ServiceUserList].
+        ///
+        /// See [Tokio Streams](https://tokio.rs/tokio/tutorial/streams)
+        /// documentation for more info on usage.
+        pub async fn pages(
+            self,
+        ) -> impl Stream<Item = Result<types::ServiceUserList, Error>> + Unpin {
+            struct State {
+                c: std::sync::Arc<Client>,
+                req: types::FilteredPaging,
+                init: bool,
+                cur_uri: Option<String>,
+            }
+
+            let s = State {
+                c: self.c,
+                req: self.req,
+                init: true,
+                cur_uri: None,
+            };
+
+            Box::pin(futures::stream::unfold(s, |s| async move {
+                let page_resp = match (s.init, &s.cur_uri) {
+                    (true, _) => s.c.list_page(&s.req).await,
+                    (false, None) => {
+                        return None;
+                    }
+                    (false, Some(uri)) => s.c.c.get_by_uri(uri).await,
+                };
+                match page_resp {
+                    Err(e) => Some((Err(e), s)),
+                    Ok(page) => {
+                        let next = page.next_page_uri.clone();
+                        Some((
+                            Ok(page),
+                            State {
+                                init: false,
+                                cur_uri: next,
+                                ..s
+                            },
+                        ))
+                    }
+                }
+            }))
+        }
+
+        /// Iterate over [types::ServiceUser] items.
+        ///
+        /// See [Tokio Streams](https://tokio.rs/tokio/tutorial/streams)
+        /// documentation for more info on usage.
+        pub async fn service_users(
+            self,
+        ) -> impl Stream<Item = Result<types::ServiceUser, Error>> + Unpin {
+            self.pages()
+                .await
+                .map_ok(|page| futures::stream::iter(page.service_users.into_iter().map(Ok)))
+                .try_flatten()
+        }
+    }
+
+    impl Client {
+        pub fn new(c: crate::Client) -> Self {
+            Self { c }
+        }
+
+        /// Create a new service user
+        pub async fn create(
+            &self,
+            req: &types::ServiceUserCreate,
+        ) -> Result<types::ServiceUser, Error> {
+            self.c
+                .make_request("/service_users", reqwest::Method::POST, Some(req))
+                .await
+        }
+
+        /// Delete a service user by ID
+        pub async fn delete(&self, id: &str) -> Result<(), Error> {
+            self.c
+                .make_request(
+                    &format!("/service_users/{id}", id = id),
+                    reqwest::Method::DELETE,
+                    None::<Option<()>>,
+                )
+                .await
+        }
+
+        /// Get the details of a Bot User by ID.
+        pub async fn get(&self, id: &str) -> Result<types::ServiceUser, Error> {
+            self.c
+                .make_request(
+                    &format!("/service_users/{id}", id = id),
+                    reqwest::Method::GET,
+                    None::<Option<()>>,
+                )
+                .await
+        }
+
+        /// Get a single page without pagination. Prefer using list
+        /// which will do pagination for you.
+        pub(crate) async fn list_page(
+            &self,
+            req: &types::FilteredPaging,
+        ) -> Result<types::ServiceUserList, Error> {
+            self.c
+                .make_request("/service_users", reqwest::Method::GET, Some(req))
+                .await
+        }
+
+        /// List all service users in this account.
+        pub fn list(&self, req: types::FilteredPaging) -> List {
+            List {
+                c: std::sync::Arc::new(self.clone()),
+                req,
+            }
+        }
+
+        /// Update attributes of a service user by ID.
+        pub async fn update(
+            &self,
+            req: &types::ServiceUserUpdate,
+        ) -> Result<types::ServiceUser, Error> {
+            self.c
+                .make_request(
+                    &format!("/service_users/{id}", id = req.id),
+                    reqwest::Method::PATCH,
+                    Some(req),
+                )
+                .await
         }
     }
 }
@@ -2708,7 +2856,7 @@ pub mod ssh_certificate_authorities {
     /// Provides streams of pages of [types::SSHCertificateAuthorityList], or of [types::SSHCertificateAuthority] directly.
     pub struct List {
         c: std::sync::Arc<Client>,
-        req: types::Paging,
+        req: types::FilteredPaging,
     }
 
     impl List {
@@ -2721,7 +2869,7 @@ pub mod ssh_certificate_authorities {
         ) -> impl Stream<Item = Result<types::SSHCertificateAuthorityList, Error>> + Unpin {
             struct State {
                 c: std::sync::Arc<Client>,
-                req: types::Paging,
+                req: types::FilteredPaging,
                 init: bool,
                 cur_uri: Option<String>,
             }
@@ -2804,7 +2952,7 @@ pub mod ssh_certificate_authorities {
                 .await
         }
 
-        /// Get detailed information about an SSH Certficate Authority
+        /// Get detailed information about an SSH Certificate Authority
         pub async fn get(&self, id: &str) -> Result<types::SSHCertificateAuthority, Error> {
             self.c
                 .make_request(
@@ -2819,7 +2967,7 @@ pub mod ssh_certificate_authorities {
         /// which will do pagination for you.
         pub(crate) async fn list_page(
             &self,
-            req: &types::Paging,
+            req: &types::FilteredPaging,
         ) -> Result<types::SSHCertificateAuthorityList, Error> {
             self.c
                 .make_request(
@@ -2831,7 +2979,7 @@ pub mod ssh_certificate_authorities {
         }
 
         /// List all SSH Certificate Authorities on this account
-        pub fn list(&self, req: types::Paging) -> List {
+        pub fn list(&self, req: types::FilteredPaging) -> List {
             List {
                 c: std::sync::Arc::new(self.clone()),
                 req,
@@ -2870,7 +3018,7 @@ pub mod ssh_credentials {
     /// Provides streams of pages of [types::SSHCredentialList], or of [types::SSHCredential] directly.
     pub struct List {
         c: std::sync::Arc<Client>,
-        req: types::Paging,
+        req: types::FilteredPaging,
     }
 
     impl List {
@@ -2883,7 +3031,7 @@ pub mod ssh_credentials {
         ) -> impl Stream<Item = Result<types::SSHCredentialList, Error>> + Unpin {
             struct State {
                 c: std::sync::Arc<Client>,
-                req: types::Paging,
+                req: types::FilteredPaging,
                 init: bool,
                 cur_uri: Option<String>,
             }
@@ -2976,7 +3124,7 @@ pub mod ssh_credentials {
         /// which will do pagination for you.
         pub(crate) async fn list_page(
             &self,
-            req: &types::Paging,
+            req: &types::FilteredPaging,
         ) -> Result<types::SSHCredentialList, Error> {
             self.c
                 .make_request("/ssh_credentials", reqwest::Method::GET, Some(req))
@@ -2984,7 +3132,7 @@ pub mod ssh_credentials {
         }
 
         /// List all ssh credentials on this account
-        pub fn list(&self, req: types::Paging) -> List {
+        pub fn list(&self, req: types::FilteredPaging) -> List {
             List {
                 c: std::sync::Arc::new(self.clone()),
                 req,
@@ -3117,7 +3265,7 @@ pub mod ssh_host_certificates {
                 .await
         }
 
-        /// Get detailed information about an SSH Host Certficate
+        /// Get detailed information about an SSH Host Certificate
         pub async fn get(&self, id: &str) -> Result<types::SSHHostCertificate, Error> {
             self.c
                 .make_request(
@@ -3273,7 +3421,7 @@ pub mod ssh_user_certificates {
                 .await
         }
 
-        /// Get detailed information about an SSH User Certficate
+        /// Get detailed information about an SSH User Certificate
         pub async fn get(&self, id: &str) -> Result<types::SSHUserCertificate, Error> {
             self.c
                 .make_request(
@@ -3341,7 +3489,7 @@ pub mod tls_certificates {
     /// Provides streams of pages of [types::TLSCertificateList], or of [types::TLSCertificate] directly.
     pub struct List {
         c: std::sync::Arc<Client>,
-        req: types::Paging,
+        req: types::FilteredPaging,
     }
 
     impl List {
@@ -3354,7 +3502,7 @@ pub mod tls_certificates {
         ) -> impl Stream<Item = Result<types::TLSCertificateList, Error>> + Unpin {
             struct State {
                 c: std::sync::Arc<Client>,
-                req: types::Paging,
+                req: types::FilteredPaging,
                 init: bool,
                 cur_uri: Option<String>,
             }
@@ -3446,7 +3594,7 @@ pub mod tls_certificates {
         /// which will do pagination for you.
         pub(crate) async fn list_page(
             &self,
-            req: &types::Paging,
+            req: &types::FilteredPaging,
         ) -> Result<types::TLSCertificateList, Error> {
             self.c
                 .make_request("/tls_certificates", reqwest::Method::GET, Some(req))
@@ -3454,7 +3602,7 @@ pub mod tls_certificates {
         }
 
         /// List all TLS certificates on this account
-        pub fn list(&self, req: types::Paging) -> List {
+        pub fn list(&self, req: types::FilteredPaging) -> List {
             List {
                 c: std::sync::Arc::new(self.clone()),
                 req,
@@ -3669,7 +3817,7 @@ pub mod vaults {
     /// Provides streams of pages of [types::VaultList], or of [types::Vault] directly.
     pub struct List {
         c: std::sync::Arc<Client>,
-        req: types::Paging,
+        req: types::FilteredPaging,
     }
 
     impl List {
@@ -3680,7 +3828,7 @@ pub mod vaults {
         pub async fn pages(self) -> impl Stream<Item = Result<types::VaultList, Error>> + Unpin {
             struct State {
                 c: std::sync::Arc<Client>,
-                req: types::Paging,
+                req: types::FilteredPaging,
                 init: bool,
                 cur_uri: Option<String>,
             }
@@ -3801,7 +3949,7 @@ pub mod vaults {
         /// which will do pagination for you.
         pub(crate) async fn list_page(
             &self,
-            req: &types::Paging,
+            req: &types::FilteredPaging,
         ) -> Result<types::VaultList, Error> {
             self.c
                 .make_request("/vaults", reqwest::Method::GET, Some(req))
@@ -3809,7 +3957,7 @@ pub mod vaults {
         }
 
         /// List all Vaults owned by account
-        pub fn list(&self, req: types::Paging) -> List {
+        pub fn list(&self, req: types::FilteredPaging) -> List {
             List {
                 c: std::sync::Arc::new(self.clone()),
                 req,
@@ -3874,6 +4022,9 @@ impl Client {
     }
     pub fn secrets(&self) -> secrets::Client {
         secrets::Client::new(self.clone())
+    }
+    pub fn service_users(&self) -> service_users::Client {
+        service_users::Client::new(self.clone())
     }
     pub fn ssh_certificate_authorities(&self) -> ssh_certificate_authorities::Client {
         ssh_certificate_authorities::Client::new(self.clone())
