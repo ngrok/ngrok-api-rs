@@ -112,7 +112,6 @@ jobs:
   semver:
     name: Semver Check
     runs-on: ubuntu-latest
-    continue-on-error: true
     strategy:
       matrix:
         crate: [ngrok-api]
@@ -129,7 +128,7 @@ jobs:
   publish-ngrok-api:
     name: Publish ngrok-api
     uses: ./.github/workflows/release.yml
-    needs: [udeps, fmt, clippy, test-nix, test-stable, test-win, semver]
+    needs: [udeps, fmt, clippy, test-nix, test-stable, test-win]
     if: github.ref_name == 'main' && github.repository == 'ngrok/ngrok-api-rs'
     permissions:
       contents: write
