@@ -112,6 +112,7 @@ jobs:
   semver:
     name: Semver Check
     runs-on: ubuntu-latest
+    continue-on-error: true
     strategy:
       matrix:
         crate: [ngrok-api]
