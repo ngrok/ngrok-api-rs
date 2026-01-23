@@ -17,8 +17,16 @@ pub struct Paging {
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct FilteredPaging {
+    /// Expects a resource ID as its input. Returns earlier entries in the result set,
+    /// sorted by ID.
     pub before_id: Option<String>,
+    /// Constrains the number of results in the dataset. See the [API
+    /// Overview](https://ngrok.com/docs/api/index#pagination) for details.
     pub limit: Option<String>,
+    /// A CEL expression to filter the list results. Supports logical and comparison
+    /// operators to match on fields such as `id`, `metadata`, `created_at`, and more.
+    /// See ngrok API Filtering for syntax and field details:
+    /// https://ngrok.com/docs/api/api-filtering.
     pub filter: Option<String>,
 }
 
@@ -783,8 +791,9 @@ pub struct CredentialCreate {
     /// is equivalent to no acl at all and will explicitly permit all actions.
     pub acl: Vec<String>,
     /// If supplied at credential creation, ownership will be assigned to the specified
-    /// User or Bot. Only admins may specify an owner other than themselves. Defaults to
-    /// the authenticated User or Bot.
+    /// User or Service User. Only admins may specify an owner other than themselves.
+    /// Defaults to the authenticated User or Service User. Accepts one of: User ID,
+    /// User email, or SCIM User ID.
     pub owner_id: Option<String>,
 }
 
@@ -844,8 +853,9 @@ pub struct Credential {
     /// is equivalent to no acl at all and will explicitly permit all actions.
     pub acl: Vec<String>,
     /// If supplied at credential creation, ownership will be assigned to the specified
-    /// User or Bot. Only admins may specify an owner other than themselves. Defaults to
-    /// the authenticated User or Bot.
+    /// User or Service User. Only admins may specify an owner other than themselves.
+    /// Defaults to the authenticated User or Service User. Accepts one of: User ID,
+    /// User email, or SCIM User ID.
     pub owner_id: Option<String>,
 }
 
@@ -1919,10 +1929,20 @@ pub struct EndpointCreate {
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct EndpointListArgs {
+    /// Expects a resource ID as its input. Returns earlier entries in the result set,
+    /// sorted by ID.
     pub before_id: Option<String>,
+    /// Constrains the number of results in the dataset. See the [API
+    /// Overview](https://ngrok.com/docs/api/index#pagination) for details.
     pub limit: Option<String>,
+    /// Filter results by endpoint IDs. Deprecated: use `filter` instead.
     pub id: Vec<String>,
+    /// Filter results by endpoint URLs. Deprecated: use `filter` instead.
     pub url: Vec<String>,
+    /// A CEL expression to filter the list results. Supports logical and comparison
+    /// operators to match on fields such as `id`, `metadata`, `created_at`, and more.
+    /// See ngrok API Filtering for syntax and field details:
+    /// https://ngrok.com/docs/api/api-filtering.
     pub filter: Option<String>,
 }
 
@@ -2472,6 +2492,9 @@ pub struct ReservedDomainCreate {
     /// null if automatic management is disabled. Optional, mutually exclusive with
     /// `certificate_id`.
     pub certificate_management_policy: Option<ReservedDomainCertPolicy>,
+    /// DNS resolver targets configured for the reserved domain, or empty for "global"
+    /// resolution.
+    pub resolves_to: Option<Vec<ReservedDomainResolvesToEntry>>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -2489,6 +2512,9 @@ pub struct ReservedDomainUpdate {
     /// null if automatic management is disabled. Optional, mutually exclusive with
     /// `certificate_id`.
     pub certificate_management_policy: Option<ReservedDomainCertPolicy>,
+    /// DNS resolver targets configured for the reserved domain, or empty for "global"
+    /// resolution.
+    pub resolves_to: Option<Vec<ReservedDomainResolvesToEntry>>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -2529,6 +2555,9 @@ pub struct ReservedDomain {
     /// non-ngrok reserved domains. Must be null for non-wildcard domains and ngrok
     /// subdomains.
     pub acme_challenge_cname_target: Option<String>,
+    /// DNS resolver targets configured for the reserved domain, or empty for "global"
+    /// resolution.
+    pub resolves_to: Option<Vec<ReservedDomainResolvesToEntry>>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -2572,6 +2601,12 @@ pub struct ReservedDomainCertJob {
     pub started_at: String,
     /// timestamp when the provisioning job will be retried
     pub retries_at: Option<String>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+pub struct ReservedDomainResolvesToEntry {
+    /// accepts an ngrok point-of-presence shortcode, or "global"
+    pub value: String,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
