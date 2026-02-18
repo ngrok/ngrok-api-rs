@@ -1,4 +1,8 @@
 <!-- Code generated for API Clients. DO NOT EDIT. -->
+## 0.12.0
+* **BREAKING**: Upgraded `reqwest` from `0.11` to `0.12`. If you pass a custom `reqwest::Client` via the builder, you must upgrade your `reqwest` dependency to `0.12`.
+* Switched TLS backend from `native-tls` to `rustls-tls` to fix compilation failures with recent Rust nightly toolchains.
+
 ## 0.11.0
 * Add support for `resolves_to` on Reserved Domains.
 * Deprecate API filtering via `id` and `url` query parameters. Please migrate to the filtering syntax described in [API Filtering](https://ngrok.com/docs/api/api-filtering).
