@@ -1,4 +1,7 @@
 <!-- Code generated for API Clients. DO NOT EDIT. -->
+## 0.12.1
+* Require `webpki-roots` 1.0.10 or later. This drops the distrusted eMudhra root certificate from the roots that `rustls-tls` trusts.
+
 ## 0.12.0
 * **BREAKING**: Upgraded `reqwest` from `0.11` to `0.12`. If you pass a custom `reqwest::Client` via the builder, you must upgrade your `reqwest` dependency to `0.12`.
 * Switched TLS backend from `native-tls` to `rustls-tls` to fix compilation failures with recent Rust nightly toolchains.
