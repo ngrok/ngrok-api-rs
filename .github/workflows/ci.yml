@@ -10,10 +10,10 @@ jobs:
     name: Udeps
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2.8.0
       - uses: jrobsonchase/direnv-action@v0.7
-      - uses: ./.github/workflows/rust-cache
-      - uses: actions-rs/cargo@v1
+      - uses: $/.github/workflows/rust-cache
+      - uses: actions-rs/cargo@v1.0.3
         with:
           command: udeps
           args: --workspace --all-targets --all-features
@@ -22,9 +22,9 @@ jobs:
     name: Rustfmt
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2.8.0
       - uses: jrobsonchase/direnv-action@v0.7
-      - uses: actions-rs/cargo@v1
+      - uses: actions-rs/cargo@v1.0.3
         with:
           command: fmt
           args: --all -- --check
@@ -33,10 +33,10 @@ jobs:
     name: Clippy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2.8.0
       - uses: jrobsonchase/direnv-action@v0.7
-      - uses: ./.github/workflows/rust-cache
-      - uses: actions-rs/cargo@v1
+      - uses: $/.github/workflows/rust-cache
+      - uses: actions-rs/cargo@v1.0.3
         with:
           command: clippy
           args: --all-targets --all-features --workspace -- -D warnings
@@ -45,10 +45,10 @@ jobs:
     name: Test Docs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2.8.0
       - uses: jrobsonchase/direnv-action@v0.7
-      - uses: ./.github/workflows/rust-cache
-      - uses: actions-rs/cargo@v1
+      - uses: $/.github/workflows/rust-cache
+      - uses: actions-rs/cargo@v1.0.3
         env:
           NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
         with:
@@ -59,10 +59,10 @@ jobs:
     name: Test Nix
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2.8.0
       - uses: jrobsonchase/direnv-action@v0.7
-      - uses: ./.github/workflows/rust-cache
-      - uses: actions-rs/cargo@v1
+      - uses: $/.github/workflows/rust-cache
+      - uses: actions-rs/cargo@v1.0.3
         env:
           NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
         with:
@@ -73,16 +73,16 @@ jobs:
     name: Test Stable
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
+      - uses: actions/checkout@v2.8.0
+      - uses: actions-rs/toolchain@v1.0.7
         with:
           profile: minimal
           toolchain: stable
           override: true
       # We don't actualy have sccache installed here (yet), but it still
       # benefits from the cargo cache.
-      - uses: ./.github/workflows/rust-cache
-      - uses: actions-rs/cargo@v1
+      - uses: $/.github/workflows/rust-cache
+      - uses: actions-rs/cargo@v1.0.3
         env:
           NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
         with:
@@ -93,16 +93,16 @@ jobs:
     name: Test Windows Stable
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
+      - uses: actions/checkout@v2.8.0
+      - uses: actions-rs/toolchain@v1.0.7
         with:
           profile: minimal
           toolchain: stable
           override: true
       # We don't actualy have sccache installed here (yet), but it still
       # benefits from the cargo cache.
-      - uses: ./.github/workflows/rust-cache
-      - uses: actions-rs/cargo@v1
+      - uses: $/.github/workflows/rust-cache
+      - uses: actions-rs/cargo@v1.0.3
         env:
           NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
         with:
@@ -116,10 +116,10 @@ jobs:
       matrix:
         crate: [ngrok-api]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2.8.0
       - uses: jrobsonchase/direnv-action@v0.7
-      - uses: ./.github/workflows/rust-cache
-      - uses: actions-rs/cargo@v1
+      - uses: $/.github/workflows/rust-cache
+      - uses: actions-rs/cargo@v1.0.3
         name: semver checks
         with:
           command: semver-checks
